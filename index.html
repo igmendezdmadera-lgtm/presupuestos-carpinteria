@@ -123,6 +123,18 @@ main{flex:1;min-width:0;padding:20px 22px 90px}
 .mueble.abierto .mueble-det{display:block}
 .campos{display:flex;flex-wrap:wrap;gap:13px}
 .mueble-acciones{margin-top:13px;padding-top:12px;border-top:1px dashed var(--linea);display:flex;justify-content:flex-end}
+.piezas-med{margin-top:14px;padding-top:13px;border-top:1px dashed var(--linea)}
+.pm-cab{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2);margin-bottom:9px}
+.pm-cab span{letter-spacing:0;text-transform:none;color:var(--tinta-3);font-size:11px}
+.pm-scroll{overflow-x:auto}
+.pm-tabla{width:100%;border-collapse:collapse;font-size:13px}
+.pm-tabla th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-3);
+  text-align:left;padding:4px 6px;border-bottom:1px solid var(--linea);font-weight:500;white-space:nowrap}
+.pm-tabla td{padding:4px 6px;border-bottom:1px solid var(--papel-2);vertical-align:middle}
+.pm-tabla input,.pm-tabla select{padding:6px 8px;border:1px solid var(--linea);border-radius:2px;
+  background:var(--papel);font-family:var(--mono);font-size:13px}
+.pm-tabla input[type=text]{font-family:var(--sans)}
+.pm-num{width:82px;text-align:right}
 .campo{display:flex;flex-direction:column;gap:3px}
 .campo label{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2)}
 .campo input,.campo select{width:98px;padding:6px 8px;border:1px solid var(--linea);border-radius:2px;
@@ -1192,6 +1204,10 @@ const puertas = (A, H, C, n) => {
 /* ==================================================================
    MODELOS DE MUEBLE
    ================================================================== */
+/* pieza en blanco para el mueble a medida. cantos: número 0-4 = cuántos lados
+   llevan canto (igual que la pieza suelta). mat: rol del material. */
+const nuevaPiezaLibre = () => ({nombre:'', largo:0, ancho:0, cant:1, cantos:0, mat:'cuerpo'});
+
 const MODELOS = {
   bajo: {
     nombre: 'Bajo mesada 2 puertas',
@@ -1303,6 +1319,14 @@ const MODELOS = {
       };
     }
   },
+  medida: {
+    nombre: 'Mueble a medida',
+    fila: 'bajo',
+    custom: true,                        // las piezas las carga el usuario, no una fórmula
+    med: {ancho:1000, alto:2000, prof:400},
+    horas: {taller:0, colocacion:0},     // por defecto; en cada mueble se editan aparte
+    calc(){ return {piezas:[], herrajes:{}}; }
+  },
   libre: {
     nombre: 'Pieza suelta',
     fila: 'bajo',
@@ -1328,9 +1352,23 @@ const ETIQUETAS = {ancho:'Ancho (mm)', alto:'Alto (mm)', prof:'Prof. (mm)',
 /* ==================================================================
    CÁLCULO
    ================================================================== */
+/* el mueble a medida arma sus piezas de la lista que cargó el usuario, no de
+   una fórmula. cantos 0-4 = cuántos lados llevan canto (t, l, b, r en ese orden). */
+function piezasAMedida(mu){
+  const piezas = (mu.piezas || []).map(p => ({
+    nombre: p.nombre || 'Pieza',
+    mat: p.mat || 'cuerpo',
+    largo: +p.largo || 0,
+    ancho: +p.ancho || 0,
+    cant: Math.max(0, +p.cant || 0),
+    cantos: {t:(+p.cantos>=1)?1:0, l:(+p.cantos>=2)?1:0, b:(+p.cantos>=3)?1:0, r:(+p.cantos>=4)?1:0}
+  }));
+  return {piezas, herrajes:{}};
+}
+
 function calcularMueble(mu){
   const modelo = MODELOS[mu.tipo];
-  const r = modelo.calc(mu.med, armadoEfectivo(PC()));
+  const r = modelo.custom ? piezasAMedida(mu) : modelo.calc(mu.med, armadoEfectivo(PC()));
   const cant = Math.max(0, +mu.cant || 0);
 
   const areaPorMat = {}, piezas = [];
@@ -1350,9 +1388,10 @@ function calcularMueble(mu){
   for(const k in r.herrajes) herrajes[k] = r.herrajes[k]*cant;
   if(mlCanto > 0) herrajes.canto = mlCanto;
 
+  const Hs = modelo.custom ? (mu.horas || {}) : modelo.horas;
   const horas = {
-    taller: (modelo.horas.taller||0)*cant,
-    colocacion: (modelo.horas.colocacion||0)*cant
+    taller: (+Hs.taller||0)*cant,
+    colocacion: (+Hs.colocacion||0)*cant
   };
   return {piezas, areaPorMat, herrajes, horas, nombre:modelo.nombre};
 }
@@ -1867,6 +1906,38 @@ function renderCatalogo(){
   $('#catalogo').innerHTML = base + seccionMios;
 }
 
+/* editor de piezas del "Mueble a medida": una fila por pieza + horas propias */
+function bloquePiezasMedida(mu, i){
+  const MATS = {cuerpo:'Material del mueble', fondo:'Fondo (MDF)', interior:'Interior (cajón)'};
+  const filas = (mu.piezas || []).map((p, idx) => `
+    <tr>
+      <td><input type="text" value="${esc(p.nombre||'')}" placeholder="Ej: estante" data-pza="${i}:${idx}:nombre" style="min-width:130px"></td>
+      <td><input type="number" min="0" step="1" value="${p.largo||0}" data-pza="${i}:${idx}:largo" class="pm-num"></td>
+      <td><input type="number" min="0" step="1" value="${p.ancho||0}" data-pza="${i}:${idx}:ancho" class="pm-num"></td>
+      <td><input type="number" min="0" step="1" value="${p.cant||0}" data-pza="${i}:${idx}:cant" class="pm-num" style="width:56px"></td>
+      <td><select data-pza="${i}:${idx}:cantos">${[0,1,2,3,4].map(n=>`<option value="${n}" ${(+p.cantos||0)===n?'selected':''}>${n}</option>`).join('')}</select></td>
+      <td><select data-pza="${i}:${idx}:mat">${Object.entries(MATS).map(([k,t])=>`<option value="${k}" ${(p.mat||'cuerpo')===k?'selected':''}>${t}</option>`).join('')}</select></td>
+      <td><button class="borrar" data-delpza="${i}:${idx}" title="Quitar pieza">×</button></td>
+    </tr>`).join('');
+  return `
+    <div class="piezas-med">
+      <div class="pm-cab">Piezas del mueble <span>— cargá cada tabla; canto = cuántos lados llevan tapacanto (0 a 4)</span></div>
+      <div class="pm-scroll">
+        <table class="pm-tabla">
+          <thead><tr><th>Pieza</th><th>Largo</th><th>Ancho</th><th>Cant.</th><th>Cantos</th><th>Material</th><th></th></tr></thead>
+          <tbody>${filas}</tbody>
+        </table>
+      </div>
+      <button class="btn sec" data-addpza="${i}" style="margin-top:11px">+ Agregar pieza</button>
+      <div class="campos" style="margin-top:14px">
+        <div class="campo"><label>Horas de taller</label>
+          <input type="number" min="0" step="0.5" value="${(mu.horas&&mu.horas.taller)||0}" data-hora="${i}:taller"></div>
+        <div class="campo"><label>Horas de colocación</label>
+          <input type="number" min="0" step="0.5" value="${(mu.horas&&mu.horas.colocacion)||0}" data-hora="${i}:colocacion"></div>
+      </div>
+    </div>`;
+}
+
 function renderMuebles(T){
   const cont = $('#listaMuebles');
   $('#vacioMuebles').style.display = S.muebles.length ? 'none' : 'block';
@@ -1886,6 +1957,8 @@ function renderMuebles(T){
         <label>${ETIQUETAS[k]||k}</label>
         <input type="number" min="0" step="1" value="${v}" data-med="${i}:${k}">
       </div>`).join('');
+
+    const piezasHTML = modelo.custom ? bloquePiezasMedida(mu, i) : '';
 
     return `
     <div class="mueble ${mu.abierto?'abierto':''}">
@@ -1915,6 +1988,7 @@ function renderMuebles(T){
           </div>
           ${campos}
         </div>
+        ${piezasHTML}
         <div class="mueble-acciones">
           <button class="btn sec" data-savemodelo="${i}"
             title="Guardar este mueble en tu base para reusarlo con otro cliente">Guardar como modelo</button>
@@ -2808,7 +2882,10 @@ document.addEventListener('click', e => {
     if(!mu) return;
     const nombre = (mu.nombre || MODELOS[mu.tipo].nombre || 'Mueble').trim();
     S.modelosGuardados = S.modelosGuardados || [];
-    S.modelosGuardados.push({id:nuevoId('mod_'), nombre, tipo:mu.tipo, med:{...mu.med}});
+    const guardado = {id:nuevoId('mod_'), nombre, tipo:mu.tipo, med:{...mu.med}};
+    if(mu.piezas) guardado.piezas = mu.piezas.map(p => ({...p}));
+    if(mu.horas)  guardado.horas  = {...mu.horas};
+    S.modelosGuardados.push(guardado);
     guardar();
     render();
     avisar(`Guardé "${nombre}" en tus modelos. Está abajo, en "Agregar mueble".`);
@@ -2829,7 +2906,10 @@ document.addEventListener('click', e => {
   if(addmod){
     const md = (S.modelosGuardados || []).find(m => m.id === addmod.dataset.addmodelo);
     if(md && MODELOS[md.tipo]){
-      S.muebles.push({tipo:md.tipo, nombre:md.nombre, cant:1, abierto:true, med:{...md.med}});
+      const nuevo = {tipo:md.tipo, nombre:md.nombre, cant:1, abierto:true, med:{...md.med}};
+      if(md.piezas) nuevo.piezas = md.piezas.map(p => ({...p}));
+      if(md.horas)  nuevo.horas  = {...md.horas};
+      S.muebles.push(nuevo);
       render();
     }
     return;
@@ -2838,8 +2918,24 @@ document.addEventListener('click', e => {
   const add = e.target.closest('[data-add]');
   if(add){
     const k = add.dataset.add;
-    S.muebles.push({tipo:k, nombre:'', cant:1, abierto:true, med:{...MODELOS[k].med}});
+    const nuevo = {tipo:k, nombre:'', cant:1, abierto:true, med:{...MODELOS[k].med}};
+    if(MODELOS[k].custom){ nuevo.piezas = [nuevaPiezaLibre()]; nuevo.horas = {taller:0, colocacion:0}; }
+    S.muebles.push(nuevo);
     render();
+    return;
+  }
+
+  const addpza = e.target.closest('[data-addpza]');
+  if(addpza){
+    const mu = S.muebles[+addpza.dataset.addpza];
+    if(mu){ mu.piezas = mu.piezas || []; mu.piezas.push(nuevaPiezaLibre()); render(); }
+    return;
+  }
+  const delpza = e.target.closest('[data-delpza]');
+  if(delpza){
+    const [i,idx] = delpza.dataset.delpza.split(':');
+    const mu = S.muebles[i];
+    if(mu && mu.piezas){ mu.piezas.splice(+idx,1); render(); }
     return;
   }
 
@@ -3085,6 +3181,15 @@ document.addEventListener('change', e => {
   }
   if('interior' in t.dataset){ S.interiorId = t.value; render(); return; }
   if(t.dataset && t.dataset.fila){ S.muebles[t.dataset.fila].fila = t.value; render(); return; }
+  if(t.dataset && t.dataset.pza){
+    const [i,idx,f] = t.dataset.pza.split(':');
+    const mu = S.muebles[i];
+    if(mu && mu.piezas && mu.piezas[idx]){
+      mu.piezas[idx][f] = (f === 'nombre' || f === 'mat') ? t.value : (t.value === '' ? 0 : +t.value);
+      return actualizarSuave();
+    }
+    return;
+  }
   if(e.target.dataset && e.target.dataset.armado){
     S.armado[e.target.dataset.armado] = e.target.value;
     render();
@@ -3110,6 +3215,21 @@ document.addEventListener('input', e => {
   }
   if(t.dataset.cant){ S.muebles[t.dataset.cant].cant = num(t.value); return actualizarSuave(); }
   if(t.dataset.nom){ S.muebles[t.dataset.nom].nombre = t.value; return actualizarSuave(); }
+  if(t.dataset.pza){
+    const [i,idx,f] = t.dataset.pza.split(':');
+    const mu = S.muebles[i];
+    if(mu && mu.piezas && mu.piezas[idx]){
+      mu.piezas[idx][f] = (f === 'nombre' || f === 'mat') ? t.value : num(t.value);
+      return actualizarSuave();
+    }
+    return;
+  }
+  if(t.dataset.hora){
+    const [i,f] = t.dataset.hora.split(':');
+    const mu = S.muebles[i];
+    if(mu){ mu.horas = mu.horas || {taller:0, colocacion:0}; mu.horas[f] = num(t.value); return actualizarSuave(); }
+    return;
+  }
   if(t.dataset.dec){
     const [fk,id,f] = t.dataset.dec.split(':');
     const d = S.materiales[fk] && S.materiales[fk].opciones[id];
