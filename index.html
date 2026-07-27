@@ -145,6 +145,13 @@ main{flex:1;min-width:0;padding:20px 22px 90px}
 .pm-tipo:hover{border-color:var(--pino-3);background:var(--papel-2)}
 .pm-tipo .mas{font-family:var(--mono);color:var(--verde);font-weight:700}
 .pm-vacia{color:var(--tinta-3);font-size:12.5px;padding:11px 2px}
+.pm-marco{fill:none;stroke:var(--pino-3);stroke-width:1.5;stroke-dasharray:16 11;vector-effect:non-scaling-stroke}
+.pm-pieza{cursor:move;touch-action:none}
+.pm-pieza:hover rect{stroke-width:2.4}
+.pm-pieza.arrastrando rect{opacity:.85;stroke:var(--cinta);stroke-width:3}
+.pm-pza-txt{fill:var(--tinta);font-family:var(--mono);font-size:60px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.d-fondo{fill:#EDE7D8;stroke:var(--pino-3);stroke-width:1.2;stroke-dasharray:12 9;vector-effect:non-scaling-stroke}
+.d-otra{fill:#E7E1D2;stroke:var(--pino);stroke-width:1.4;vector-effect:non-scaling-stroke}
 .campo{display:flex;flex-direction:column;gap:3px}
 .campo label{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2)}
 .campo input,.campo select{width:98px;padding:6px 8px;border:1px solid var(--linea);border-radius:2px;
@@ -1217,7 +1224,7 @@ const puertas = (A, H, C, n) => {
 /* pieza en blanco para el mueble a medida. cantos: número 0-4 = cuántos lados
    llevan canto (igual que la pieza suelta). mat: rol del material. rol: dónde
    va en el dibujo de frente (lateral, estante, puerta, etc.). */
-const nuevaPiezaLibre = () => ({rol:'otra', nombre:'', largo:0, ancho:0, cant:1, cantos:0, mat:'cuerpo'});
+const nuevaPiezaLibre = () => ({rol:'otra', nombre:'', largo:0, ancho:0, cant:1, cantos:0, mat:'cuerpo', x:200, y:200});
 
 /* al tocar un tipo en el panel, se suma una pieza ya con nombre, material y
    medidas sugeridas a partir del ancho/alto/prof del mueble. Las corrige el
@@ -1225,19 +1232,37 @@ const nuevaPiezaLibre = () => ({rol:'otra', nombre:'', largo:0, ancho:0, cant:1,
 function piezaDeTipo(rol, mu){
   const A = +mu.med.ancho||0, H = +mu.med.alto||0, P = +mu.med.prof||0, e = 18;
   const cero = x => Math.max(0, Math.round(x));
+  const n = (mu.piezas||[]).filter(p => p.rol === rol).length;   // cuántas de este rol ya hay (para no encimarlas)
   const base = {rol, nombre:'', largo:0, ancho:0, cant:1, cantos:1, mat:'cuerpo'};
+  let p;
   switch(rol){
-    case 'lateral':   return {...base, nombre:'Lateral',          largo:cero(H),       ancho:cero(P),      cant:2, cantos:1};
-    case 'piso':      return {...base, nombre:'Piso',             largo:cero(A-2*e),   ancho:cero(P),      cant:1, cantos:1};
-    case 'techo':     return {...base, nombre:'Techo',            largo:cero(A-2*e),   ancho:cero(P),      cant:1, cantos:1};
-    case 'estante':   return {...base, nombre:'Estante',          largo:cero(A-2*e),   ancho:cero(P-20),   cant:1, cantos:1};
-    case 'tabique':   return {...base, nombre:'Tabique',          largo:cero(H-2*e),   ancho:cero(P),      cant:1, cantos:1};
-    case 'puerta':    return {...base, nombre:'Puerta',           largo:cero(H-6),     ancho:cero(A/2-6),  cant:2, cantos:4};
-    case 'cajon':     return {...base, nombre:'Frente de cajón',  largo:cero(A-2*e),   ancho:150,          cant:1, cantos:4};
-    case 'travesano': return {...base, nombre:'Travesaño',        largo:cero(A-2*e),   ancho:100,          cant:2, cantos:1};
-    case 'fondo':     return {...base, nombre:'Fondo',            largo:cero(A),       ancho:cero(H),      cant:1, cantos:0, mat:'fondo'};
-    default:          return {...base, nombre:'Pieza', rol:'otra', cantos:0};
+    case 'lateral':   p = {...base, nombre:'Lateral',         largo:cero(H),     ancho:cero(P),    cant:2, cantos:1}; break;
+    case 'piso':      p = {...base, nombre:'Piso',            largo:cero(A-2*e), ancho:cero(P),    cant:1, cantos:1}; break;
+    case 'techo':     p = {...base, nombre:'Techo',           largo:cero(A-2*e), ancho:cero(P),    cant:1, cantos:1}; break;
+    case 'estante':   p = {...base, nombre:'Estante',         largo:cero(A-2*e), ancho:cero(P-20), cant:1, cantos:1}; break;
+    case 'tabique':   p = {...base, nombre:'Tabique',         largo:cero(H-2*e), ancho:cero(P),    cant:1, cantos:1}; break;
+    case 'puerta':    p = {...base, nombre:'Puerta',          largo:cero(H-6),   ancho:cero(A/2-6),cant:2, cantos:4}; break;
+    case 'cajon':     p = {...base, nombre:'Frente de cajón', largo:cero(A-2*e), ancho:150,        cant:1, cantos:4}; break;
+    case 'travesano': p = {...base, nombre:'Travesaño',       largo:cero(A-2*e), ancho:100,        cant:2, cantos:1}; break;
+    case 'fondo':     p = {...base, nombre:'Fondo',           largo:cero(A),     ancho:cero(H),    cant:1, cantos:0, mat:'fondo'}; break;
+    default:          p = {...base, nombre:'Pieza', rol:'otra', cantos:0}; break;
   }
+  // posición inicial en el dibujo (mm). Sugerida por tipo; después se arrastra.
+  const T = 60;
+  let x = A/2-150, y = H/2-150;
+  switch(rol){
+    case 'lateral':   x = n%2===0 ? 0 : Math.max(0, A-T);  y = 0; break;
+    case 'piso':      x = T; y = Math.max(0, H-T); break;
+    case 'techo': case 'travesano': x = T; y = 0; break;
+    case 'estante':   x = T; y = Math.min(H-T, H*(n+1)/6); break;
+    case 'tabique':   x = A/2 - T/2; y = T; break;
+    case 'puerta':    x = Math.min(A-T, e+6 + n*Math.max(120, A/4)); y = e+6; break;
+    case 'cajon':     x = e+6; y = Math.max(0, H - T - n*180); break;
+    case 'fondo':     x = 0; y = 0; break;
+    default:          x = A/2-150 + n*50; y = H/2-150 + n*50; break;
+  }
+  p.x = Math.round(x); p.y = Math.round(y);
+  return p;
 }
 
 const MODELOS = {
@@ -1938,55 +1963,53 @@ function renderCatalogo(){
   $('#catalogo').innerHTML = base + seccionMios;
 }
 
-/* vista de frente del mueble a medida: el marco sale del ancho/alto del mueble
-   y cada pieza se ubica según su tipo (rol). Es un esquema, no un plano exacto. */
-function dibujoMedida(mu){
+/* cómo se ve una pieza en el dibujo de frente, según su tipo (rol).
+   Los paneles finos (laterales, estantes) se dibujan con un grosor esquemático
+   para que se puedan agarrar y arrastrar. Devuelve tamaño y clase. */
+function dimsPieza(p){
+  const T = 60;                                  // grosor esquemático de los paneles finos
+  const L = Math.max(30, +p.largo||0), An = Math.max(30, +p.ancho||0);
+  switch(p.rol){
+    case 'lateral': case 'tabique':                       return {w:T, h:L, cls:'d-panel'};
+    case 'piso': case 'techo': case 'estante': case 'travesano': return {w:L, h:T, cls:'d-panel'};
+    case 'puerta':                                        return {w:An, h:L, cls:'d-puerta'};
+    case 'cajon':                                         return {w:L, h:An, cls:'d-puerta'};
+    case 'fondo':                                         return {w:L, h:An, cls:'d-fondo'};
+    default:                                              return {w:Math.max(200,+p.largo||0), h:Math.max(200,+p.ancho||0), cls:'d-otra'};
+  }
+}
+
+/* vista de frente del mueble a medida. Arranca VACÍA: solo el contorno del
+   mueble (ancho×alto) como guía. Cada pieza es un bloque que se arrastra a
+   mano (con el dedo o el mouse) para ubicarlo. Es un esquema para diseñar. */
+function dibujoMedida(mu, i){
   const A = +mu.med.ancho||0, H = +mu.med.alto||0;
-  if(A <= 0 || H <= 0) return '<div class="pm-nodib">Poné el ancho y el alto arriba para ver el dibujo.</div>';
-  const e = 18, f = v => (+v).toFixed(1);
-  const R = (x,y,w,h,c) => w>0 && h>0 ? `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" class="${c}"/>` : '';
-  const L = (x1,y1,x2,y2,c) => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" class="${c}"/>`;
-  const P = mu.piezas || [];
-  const suma = rol => P.filter(p => p.rol === rol).reduce((a,p) => a + Math.max(0,+p.cant||0), 0);
-  const hay  = rol => P.some(p => p.rol === rol);
+  if(A <= 0 || H <= 0) return '<div class="pm-nodib">Poné el ancho y el alto arriba para empezar a diseñar.</div>';
+  const f = v => (+v).toFixed(1);
+  const piezas = mu.piezas || [];
 
-  let g = R(0, 0, A, H, 'd-cuerpo');
-  const nLat = suma('lateral');
-  if(nLat >= 1) g += R(0, 0, e, H, 'd-panel');
-  if(nLat >= 2) g += R(A-e, 0, e, H, 'd-panel');
-  if(hay('piso'))      g += R(e, H-e, A-2*e, e, 'd-panel');
-  if(hay('techo'))     g += R(e, 0, A-2*e, e, 'd-panel');
-  if(hay('travesano')) g += R(e, 0, A-2*e, e*0.6, 'd-panel');
-
-  const nTab = suma('tabique');
-  for(let i=1;i<=nTab;i++){ const x = A*i/(nTab+1); g += R(x-e/2, e, e, H-2*e, 'd-panel'); }
-  const nEst = suma('estante');
-  for(let i=1;i<=nEst;i++){ const y = H*i/(nEst+1); g += L(e+4, y, A-e-4, y, 'd-linea'); }
-
-  const nCaj = suma('cajon');
-  if(nCaj > 0){
-    const hh = (H - 2*e) / Math.max(nCaj, 3);
-    for(let i=0;i<nCaj;i++){ const y = H-e-(i+1)*hh; g += R(e+3, y, A-2*e-6, hh-4, 'd-puerta'); g += L(A/2-70, y+hh/2, A/2+70, y+hh/2, 'd-tirador'); }
-  }
-  const nPue = suma('puerta');
-  if(nPue > 0){
-    const gap = 6, pw = (A - 2*e - (nPue+1)*gap) / nPue;
-    for(let i=0;i<nPue;i++){ const x = e+gap+i*(pw+gap); g += R(x, e+gap, pw, H-2*e-2*gap, 'd-puerta'); const hx = i%2===0 ? x+pw-24 : x+24; g += L(hx, H/2-70, hx, H/2+70, 'd-tirador'); }
-  }
+  const bloques = piezas.map((p, idx) => {
+    const d = dimsPieza(p), x = +p.x||0, y = +p.y||0;
+    return `<g class="pm-pieza" data-arr="${i}:${idx}" transform="translate(${f(x)},${f(y)})">
+      <rect x="0" y="0" width="${f(d.w)}" height="${f(d.h)}" class="${d.cls}"/>
+      <text x="${f(d.w/2)}" y="${f(d.h/2)}" class="pm-pza-txt">${esc(p.nombre||'')}</text>
+    </g>`;
+  }).join('');
 
   const m = 90, pie = 150;
   return `<svg viewBox="${-m} ${-m} ${A+2*m} ${H+m+pie}" class="dibujo pm-dib" xmlns="http://www.w3.org/2000/svg">
-    ${g}
+    <rect x="0" y="0" width="${f(A)}" height="${f(H)}" class="pm-marco"/>
+    ${bloques}
     <line x1="0" y1="${H+55}" x2="${A}" y2="${H+55}" class="d-cota"/>
     <text x="${A/2}" y="${H+125}" class="d-texto">${nf.format(Math.round(A))} × ${nf.format(Math.round(H))} mm</text>
   </svg>`;
 }
 
 /* refresca solo el dibujo de un mueble a medida sin repintar los campos (para
-   no perder el foco mientras se tipea una medida) */
+   no perder el foco mientras se tipea una medida ni el arrastre) */
 function refDibMedida(i){
   const cont = document.getElementById('dibmedida-'+i), mu = S.muebles[i];
-  if(cont && mu && MODELOS[mu.tipo] && MODELOS[mu.tipo].custom) cont.innerHTML = dibujoMedida(mu);
+  if(cont && mu && MODELOS[mu.tipo] && MODELOS[mu.tipo].custom) cont.innerHTML = dibujoMedida(mu, +i);
 }
 
 /* editor de piezas del "Mueble a medida": panel de tipos + dibujo + una fila por pieza + horas */
@@ -2011,7 +2034,7 @@ function bloquePiezasMedida(mu, i){
   return `
     <div class="piezas-med">
       <div class="pm-cab">Diseño del mueble <span>— tocá un tipo; se dibuja arriba y se suma abajo para ponerle las medidas</span></div>
-      <div class="pm-dib-caja" id="dibmedida-${i}">${dibujoMedida(mu)}</div>
+      <div class="pm-dib-caja" id="dibmedida-${i}">${dibujoMedida(mu, i)}</div>
       <div class="pm-paleta">${paleta}</div>
       <div class="pm-scroll" style="margin-top:12px">
         <table class="pm-tabla">
@@ -3293,6 +3316,43 @@ document.addEventListener('change', e => {
     render();
   }
 });
+
+/* ---- arrastrar las piezas del mueble a medida (dedo o mouse) ---- */
+let arrastre = null;
+/* pasa un punto de la pantalla al sistema de coordenadas (mm) del dibujo,
+   contemplando cualquier escala o encaje del SVG */
+function ptUsuario(svg, cx, cy){
+  const m = svg.getScreenCTM(); if(!m) return null;
+  const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy;
+  const u = pt.matrixTransform(m.inverse());
+  return {x:u.x, y:u.y};
+}
+document.addEventListener('pointerdown', e => {
+  const g = e.target.closest('.pm-pieza[data-arr]');
+  if(!g) return;
+  const svg = g.closest('svg'); if(!svg) return;
+  const [i, idx] = g.dataset.arr.split(':');
+  const mu = S.muebles[i];
+  if(!mu || !mu.piezas || !mu.piezas[idx]) return;
+  const u0 = ptUsuario(svg, e.clientX, e.clientY); if(!u0) return;
+  arrastre = {
+    g, p: mu.piezas[idx], svg, u0,
+    ox: +mu.piezas[idx].x||0, oy: +mu.piezas[idx].y||0
+  };
+  try{ g.setPointerCapture(e.pointerId); }catch(_){}
+  g.classList.add('arrastrando');
+  e.preventDefault();
+});
+document.addEventListener('pointermove', e => {
+  if(!arrastre) return;
+  const u = ptUsuario(arrastre.svg, e.clientX, e.clientY); if(!u) return;
+  arrastre.p.x = Math.round(arrastre.ox + (u.x - arrastre.u0.x));
+  arrastre.p.y = Math.round(arrastre.oy + (u.y - arrastre.u0.y));
+  arrastre.g.setAttribute('transform', `translate(${arrastre.p.x},${arrastre.p.y})`);
+});
+function soltarArrastre(){ if(arrastre){ arrastre.g.classList.remove('arrastrando'); arrastre = null; guardar(); } }
+document.addEventListener('pointerup', soltarArrastre);
+document.addEventListener('pointercancel', soltarArrastre);
 
 document.addEventListener('input', e => {
   const t = e.target;
