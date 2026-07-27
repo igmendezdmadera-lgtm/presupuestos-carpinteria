@@ -152,6 +152,12 @@ main{flex:1;min-width:0;padding:20px 22px 90px}
 .pm-pza-txt{fill:var(--tinta);font-family:var(--mono);font-size:60px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
 .d-fondo{fill:#EDE7D8;stroke:var(--pino-3);stroke-width:1.2;stroke-dasharray:12 9;vector-effect:non-scaling-stroke}
 .d-otra{fill:#E7E1D2;stroke:var(--pino);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.armado-control{display:flex;flex-wrap:wrap;gap:12px}
+.ac-campo{display:flex;flex-direction:column;gap:4px;min-width:180px;flex:1 1 200px}
+.ac-campo > span{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta-2)}
+.ac-campo select,.ac-campo input{padding:8px 9px;border:1px solid var(--linea);border-radius:2px;
+  background:var(--papel);font-family:var(--sans);font-size:13px}
+.ac-campo input{font-family:var(--mono);width:110px;flex:none}
 .campo{display:flex;flex-direction:column;gap:3px}
 .campo label{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2)}
 .campo input,.campo select{width:98px;padding:6px 8px;border:1px solid var(--linea);border-radius:2px;
@@ -463,6 +469,13 @@ body.imprimiendo .barra-papel{display:flex}
 
   <!-- ============ DESPIECE ============ -->
   <section id="v-despiece" class="oculto">
+    <div class="bloque" id="bloqueArmado" style="margin-bottom:16px">
+      <header><h2>Cómo armás este trabajo</h2>
+        <span class="eyebrow" style="margin-left:auto">se define una vez; podés cambiarlo acá y recalcula todo</span>
+      </header>
+      <div class="cuerpo"><div class="armado-control" id="cajaArmado"></div></div>
+    </div>
+
     <div class="grid">
       <div class="bloque">
         <header>
@@ -1540,6 +1553,7 @@ function render(){
   renderDespiece(T);
   renderCompras(T);
   renderCorte();
+  if($('#cajaArmado')) $('#cajaArmado').innerHTML = armadoControlHTML();
   renderPrecios();
   renderArchivo();
   $('#cajaDibujo').innerHTML = dibujoConjunto() ||
@@ -1743,6 +1757,18 @@ function dibujoPlaca(pl, plW, plH, idx){
 }
 const f1 = v => (+v).toFixed(1);
 
+/* control compacto de "Cómo armás" para tenerlo a mano en Despiece (además de
+   Precios). Usa los mismos data-armado/data-armadonum, así lo maneja el mismo
+   código. Se define una vez, pero se puede cambiar por trabajo y recalcula todo. */
+function armadoControlHTML(){
+  const sel = (k,A) => `<label class="ac-campo"><span>${esc(A.n)}</span>
+    <select data-armado="${k}">${Object.entries(A.op).map(([v,t]) =>
+      `<option value="${v}" ${String(S.armado[k])===v?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
+  return Object.entries(ARMADO_OPCIONES).map(([k,A]) => sel(k,A)).join('') +
+    `<label class="ac-campo"><span>Luz de puerta (mm)</span><input type="number" min="0" step="0.5" value="${S.armado.luzPuerta}" data-armadonum="luzPuerta"></label>` +
+    `<label class="ac-campo"><span>Profundidad de ranura (mm)</span><input type="number" min="0" step="0.5" value="${S.armado.ranura}" data-armadonum="ranura"></label>`;
+}
+
 function renderCorte(){
   const caja = $('#cajaCorte'); if(!caja) return;
   const k = $('#corteKerf'); if(k && document.activeElement !== k) k.value = PC().armado.corte;
@@ -1763,7 +1789,7 @@ function renderCorte(){
     html += `<div class="corte-rol">
       <h3>${nombre}</h3>
       <div class="corte-resumen">
-        <b>${o.n} placa${o.n===1?'':'s'}</b> por corte real · desperdicio ${nf.format(Math.round(o.desperdicio*100))}% · ${r.cuenta} piezas
+        <b>${o.n} placa${o.n===1?'':'s'}</b> por corte real · aprovechamiento ${nf.format(Math.round((1-o.desperdicio)*100))}% <span class="corte-vs">(desperdicio ${nf.format(Math.round(o.desperdicio*100))}%)</span> · ${r.cuenta} piezas
         ${est ? ` · <span class="corte-vs">la estimación por m² daba ${esc(est.detalle)}</span>` : ''}
         ${o.grandes.length ? `<div class="corte-grande"><b>⚠ ${o.grandes.length} pieza${o.grandes.length===1?'':'s'} no entra${o.grandes.length===1?'':'n'} en la placa</b> (van en varios paños o a medida): ${
           o.grandes.map(g => esc(g.nombre)+' '+Math.round(g.largo)+'×'+Math.round(g.ancho)).join('  ·  ')}</div>` : ''}
@@ -2884,8 +2910,9 @@ function mapaCorteTaller(T){
   for(const r of roles){
     const o = r.opt;
     html += `<div class="corte-taller">
-      <div class="doc-min"><b>${esc(r.placa.n)}</b> — ${o.n} placa${o.n===1?'':'s'} · desperdicio ${
-        nf.format(Math.round(o.desperdicio*100))}%${r.placa.veta ? ' · con veta (no se giran)' : ''}</div>
+      <div class="doc-min"><b>${esc(r.placa.n)}</b> — ${o.n} placa${o.n===1?'':'s'} · aprovechamiento ${
+        nf.format(Math.round((1-o.desperdicio)*100))}% <span style="color:#777">(desperdicio ${
+        nf.format(Math.round(o.desperdicio*100))}%)</span>${r.placa.veta ? ' · con veta (no se giran)' : ''}</div>
       ${o.grandes.length ? `<div class="doc-min" style="color:var(--cinta-osc);margin-top:3px">⚠ No entran en la placa (a medida / varios paños): ${
         o.grandes.map(g => esc(g.nombre)+' '+Math.round(g.largo)+'×'+Math.round(g.ancho)).join(' · ')}</div>` : ''}
       <div class="corte-placas" style="margin-top:8px">${o.placas.map((pl,i) => dibujoPlaca(pl, o.plW, o.plH, i+1)).join('')}</div>
