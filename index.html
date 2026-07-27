@@ -1,0 +1,3384 @@
+<meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  /* Paleta madera nogal (rediseño, opción B): estructura espresso + crema mate
+     + acento nogal. Los nombres --pino/--cinta son históricos; ahora el acento
+     (--cinta) es NOGAL, no ámbar. El dorado quedó solo para los avisos.
+     Fondo del programa: crema mate elegido por el dueño. */
+  --pino:#241C13;      /* espresso: barra, totales, botones */
+  --pino-2:#3E2F22;
+  --pino-3:#834B29;    /* nogal: badges e indicadores del acento */
+  --papel:#E9E2D4;     /* fondo del programa (crema mate) */
+  --sup:#F6F2E9;       /* superficie de tarjetas, apenas más clara que el fondo */
+  --papel-2:#DFD7C6;
+  --papel-3:#D2C9B6;
+  --linea:#CDC3AF;
+  --tinta:#211A12;
+  --tinta-2:#6A5F4E;
+  --cinta:#834B29;     /* ACENTO nogal/caoba */
+  --cinta-osc:#623418;
+  --oro:#B9812A;       /* dorado: solo avisos (precio viejo, pieza que no entra) */
+  --verde:#46734A;
+  --rojo:#9E362A;
+  --r:3px;
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--papel);color:var(--tinta);font-family:var(--sans);font-size:14px;line-height:1.45}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ---------- barra superior ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:var(--pino);color:var(--papel);
+  display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:3px solid var(--cinta)}
+.marca{display:flex;align-items:baseline;gap:9px;min-width:0}
+.marca h1{font-size:16px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.marca span{font-family:var(--mono);font-size:10px;color:#C6B295;letter-spacing:.1em}
+.totalbox{margin-left:auto;text-align:right;line-height:1.1}
+.totalbox .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#C6B295}
+.totalbox .val{font-family:var(--mono);font-size:23px;font-weight:700;color:var(--papel)}
+
+/* ---------- navegación: lateral (compu) / inferior (tablet-celular) ---------- */
+.app{display:flex;align-items:flex-start;max-width:1280px;margin:0 auto}
+.lateral{position:sticky;top:57px;flex:0 0 216px;align-self:flex-start;
+  background:var(--sup);border-right:1px solid var(--linea);
+  padding:14px 10px;display:flex;flex-direction:column;gap:3px}
+.nav-grupo{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tinta-2);padding:12px 10px 5px}
+.nav-grupo:first-child{padding-top:2px}
+.nav-btn{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:none;
+  color:var(--tinta-2);font-family:var(--sans);font-size:14px;font-weight:600;
+  padding:11px 10px;border-radius:var(--r);min-height:44px}
+.nav-btn:hover{background:var(--papel-2);color:var(--tinta)}
+.nav-btn[aria-current="page"]{background:var(--papel-2);color:var(--pino);box-shadow:inset 3px 0 0 var(--cinta)}
+.nav-btn:focus-visible{outline:2px solid var(--cinta);outline-offset:-2px}
+.nav-ico{width:20px;height:20px;flex:0 0 auto;stroke:currentColor;fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.inferior{display:none}
+
+main{flex:1;min-width:0;padding:20px 22px 90px}
+
+@media(max-width:720px){
+  .lateral{display:none}
+  main{padding:16px 14px 84px}
+  .inferior{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:var(--sup);border-top:1px solid var(--linea)}
+  .nav-bot{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;
+    color:var(--tinta-2);font-family:var(--sans);font-size:11px;font-weight:600;
+    padding:8px 4px 9px;min-height:56px;border-top:2.5px solid transparent}
+  .nav-bot[aria-current="page"]{color:var(--cinta);border-top-color:var(--cinta)}
+  .nav-bot .nav-ico{width:22px;height:22px}
+}
+.grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+/* ---------- bloques ---------- */
+.bloque{background:var(--sup);border:1px solid var(--linea);border-radius:var(--r)}
+.bloque > header{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--linea);background:var(--papel-2)}
+.bloque > header h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--tinta-2)}
+.bloque .cuerpo{padding:14px}
+
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--tinta-2)}
+
+/* ---------- avisos ---------- */
+.aviso{display:flex;gap:11px;background:#FBF3DC;border:1px solid #E3CB84;border-left:4px solid var(--oro);
+  border-radius:var(--r);padding:11px 14px;margin-bottom:18px;font-size:13px}
+.aviso b{display:block;margin-bottom:2px}
+
+/* ---------- catálogo de módulos ---------- */
+.catalogo{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--sup);border:1px solid var(--linea);border-radius:var(--r);padding:7px 12px;
+  display:flex;align-items:center;gap:8px;transition:.12s}
+.chip:hover{border-color:var(--pino-3);background:var(--papel-2)}
+.chip .mas{font-family:var(--mono);color:var(--verde);font-weight:700}
+.chip-modelo{cursor:pointer;border-color:var(--pino-3);border-style:dashed}
+.chip-x{border:0;background:none;color:var(--tinta-2);font-size:15px;line-height:1;padding:0;margin-left:2px;cursor:pointer}
+.chip-x:hover{color:var(--rojo)}
+.catalogo-sep{flex-basis:100%;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta-2);margin-top:6px;padding-top:9px;border-top:1px dashed var(--linea)}
+
+/* ---------- mueble ---------- */
+.mueble{border:1px solid var(--linea);border-radius:var(--r);margin-bottom:11px;background:var(--sup)}
+.mueble.abierto{border-color:var(--pino-3);box-shadow:0 1px 0 var(--pino-3)}
+.mueble-cab{display:flex;align-items:center;gap:12px;padding:10px 13px;cursor:pointer;user-select:none}
+.mueble-cab:hover{background:var(--papel-2)}
+.idx{font-family:var(--mono);font-size:11px;color:#fff;background:var(--pino-3);border-radius:2px;
+  padding:2px 6px;flex:none}
+.mueble-nom{font-weight:600;flex:none}
+.mueble-med{font-family:var(--mono);font-size:12px;color:var(--tinta-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mueble-sub{font-family:var(--mono);font-weight:700;margin-left:auto;white-space:nowrap}
+.borrar{border:0;background:none;color:var(--tinta-2);font-size:17px;line-height:1;padding:2px 4px;border-radius:2px}
+.borrar:hover{color:var(--rojo);background:#F7E4E1}
+
+.mueble-det{border-top:1px dashed var(--linea);padding:13px;display:none}
+.mueble.abierto .mueble-det{display:block}
+.campos{display:flex;flex-wrap:wrap;gap:13px}
+.mueble-acciones{margin-top:13px;padding-top:12px;border-top:1px dashed var(--linea);display:flex;justify-content:flex-end}
+.campo{display:flex;flex-direction:column;gap:3px}
+.campo label{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2)}
+.campo input,.campo select{width:98px;padding:6px 8px;border:1px solid var(--linea);border-radius:2px;
+  background:var(--papel);font-family:var(--mono);font-size:13px}
+.campo input:focus,.campo select:focus{outline:2px solid var(--cinta);outline-offset:-1px;background:#fff}
+.campo.ancho input{width:210px;font-family:var(--sans)}
+
+/* ---------- tablas ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2);
+  text-align:left;padding:6px 8px;border-bottom:1px solid var(--linea);font-weight:500}
+td{padding:6px 8px;border-bottom:1px solid var(--papel-2);vertical-align:middle}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tbody tr:hover{background:var(--papel)}
+.grupo td{background:var(--pino-2);color:var(--papel);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.13em;text-transform:uppercase;padding:5px 8px;border:0}
+
+/* firma: indicador de canto por pieza */
+.canto{display:inline-block;width:21px;height:15px;background:var(--papel-2);vertical-align:-3px;
+  border:1.5px solid var(--papel-3);border-radius:1px}
+
+/* ---------- resumen ---------- */
+.resumen{position:sticky;top:100px}
+.linea-r{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13px}
+.linea-r span:last-child{font-family:var(--mono)}
+.linea-r.sub{border-top:1px solid var(--linea);margin-top:6px;padding-top:8px;font-weight:600}
+.linea-r.mini{font-size:11.5px;color:var(--tinta-2);padding:2px 0 2px 12px}
+.total-final{background:var(--pino);color:var(--papel);border-radius:var(--r);padding:12px 14px;margin-top:12px}
+.total-final .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;color:#C6B295}
+.total-final .val{font-family:var(--mono);font-size:25px;font-weight:700;color:var(--papel);line-height:1.15}
+.total-final .pxu{font-family:var(--mono);font-size:11px;color:#C6B295;margin-top:3px}
+
+.btn{border:1px solid var(--pino);background:var(--pino);color:var(--papel);border-radius:2px;
+  padding:8px 14px;font-size:12px;letter-spacing:.09em;text-transform:uppercase}
+.btn:hover{background:var(--pino-2)}
+.btn.sec{background:var(--sup);color:var(--pino);border-color:var(--linea)}
+.btn.sec:hover{background:var(--papel-2)}
+.btn:focus-visible{outline:2px solid var(--cinta);outline-offset:2px}
+
+.vacio{text-align:center;padding:34px 18px;color:var(--tinta-2)}
+.vacio p{margin:0 0 4px}
+
+/* precios — listas plegables de materiales */
+.fam-cab,.dec-cab{width:100%;display:flex;align-items:center;gap:10px;text-align:left;
+  border:0;border-bottom:1px solid var(--linea);background:var(--papel-2);padding:9px 14px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2)}
+.fam-cab:hover,.dec-cab:hover{background:var(--papel-3)}
+.grupo-cab{width:100%;display:flex;align-items:center;gap:10px;text-align:left;
+  border:0;border-bottom:1px solid var(--papel-2);background:var(--papel);padding:8px 14px 8px 22px;
+  font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--tinta-2)}
+.grupo-cab:hover{background:var(--papel-3);color:var(--tinta)}
+.grupo-cab.abierta{color:var(--tinta)}
+.grupo-cab .datos{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:400}
+.dec-cab{background:var(--sup);font-family:var(--sans);font-size:13px;letter-spacing:0;
+  text-transform:none;color:var(--tinta);border-bottom-color:var(--papel-2);padding-left:32px}
+.dec-cab.abierta{background:var(--papel);font-weight:600}
+.flecha{font-family:var(--mono);color:var(--pino-3);flex:none;width:11px}
+.dec-cab .datos{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--tinta-2);white-space:nowrap}
+.dec-cab .pendiente{color:var(--cinta-osc)}
+.esp-barra{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 14px;
+  background:var(--papel);border-bottom:1px solid var(--papel-2)}
+.chip-esp{border:1px solid var(--linea);background:var(--sup);color:var(--tinta-2);border-radius:2px;
+  padding:4px 10px;font-family:var(--mono);font-size:11.5px}
+.chip-esp:hover{border-color:var(--pino-3);color:var(--tinta)}
+.chip-esp.sel{background:var(--pino);border-color:var(--pino);color:var(--papel);font-weight:700}
+.dec-panel{padding:11px 14px 14px;border-bottom:1px solid var(--papel-2);background:var(--papel)}
+.dec-panel tr.foco td{background:#FBF3DC}
+.dec-panel .acciones{display:flex;gap:7px;align-items:center;margin-top:9px;flex-wrap:wrap}
+
+.preciotabla input{width:100%;max-width:110px;padding:5px 7px;border:1px solid var(--linea);
+  border-radius:2px;background:var(--papel);font-family:var(--mono);font-size:13px;text-align:right}
+.preciotabla input:focus{outline:2px solid var(--cinta);outline-offset:-1px;background:#fff}
+.oculto{display:none}
+
+/* importar planilla */
+.importar{border:1px dashed var(--pino-3);border-radius:var(--r);padding:14px;margin-top:12px;background:var(--papel)}
+.importar h3{font-size:12px;letter-spacing:.04em;margin-bottom:6px}
+.importar .paso{font-size:12.5px;color:var(--tinta-2);margin-bottom:10px;line-height:1.5}
+.importar textarea{width:100%;min-height:90px;padding:8px 10px;border:1px solid var(--linea);border-radius:2px;
+  background:var(--sup);font-family:var(--mono);font-size:12px;resize:vertical}
+.importar .acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.imp-tabla{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+.imp-tabla th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-2);
+  text-align:left;padding:5px 7px;border-bottom:1px solid var(--linea)}
+.imp-tabla td{padding:5px 7px;border-bottom:1px solid var(--papel-2)}
+.imp-tabla td.num{text-align:right;font-family:var(--mono)}
+.imp-tabla tr.imp-aviso td{background:#FBF3DC}
+.imp-tabla tr.imp-error td{background:#F7E4E1;color:var(--tinta-2)}
+.imp-estado{font-family:var(--mono);font-size:10.5px;white-space:nowrap}
+.imp-estado.ok{color:var(--verde)}
+.imp-estado.aviso{color:var(--cinta-osc)}
+.imp-estado.error{color:var(--rojo)}
+
+/* ---------- dibujo ---------- */
+.dibujo{width:100%;height:auto;max-height:300px;display:block}
+.dibujo-mini{width:66px;height:auto;max-height:60px;display:block}
+.d-cuerpo{fill:#EAE6DC;stroke:var(--pino);stroke-width:1.7;vector-effect:non-scaling-stroke}
+.d-puerta{fill:#DAD4C4;stroke:var(--pino);stroke-width:1;vector-effect:non-scaling-stroke}
+.d-linea{stroke:var(--pino);stroke-width:1;vector-effect:non-scaling-stroke}
+.d-tirador{stroke:var(--pino);stroke-width:2.6;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.d-piso{stroke:var(--pino);stroke-width:2.4;vector-effect:non-scaling-stroke}
+.d-cota{stroke:var(--tinta-2);stroke-width:1;vector-effect:non-scaling-stroke}
+.d-texto{fill:var(--tinta-2);font-family:var(--mono);font-size:78px;text-anchor:middle}
+.doc-dibujo{border:1px solid #DDD;border-radius:3px;padding:14px;margin-bottom:18px;background:#FCFBF8}
+
+/* ---------- mapa de corte ---------- */
+.corte-rol{padding:14px;border-bottom:1px solid var(--linea)}
+.corte-rol:last-child{border-bottom:0}
+.corte-rol h3{font-size:13px;margin-bottom:6px}
+.corte-resumen{font-size:13px;color:var(--tinta-2);margin-bottom:12px;line-height:1.5}
+.corte-resumen b{color:var(--tinta);font-family:var(--mono)}
+.corte-vs{color:var(--tinta-2)}
+.corte-grande{margin-top:6px;background:#FBF3DC;border-left:3px solid var(--oro);
+  padding:7px 10px;border-radius:2px;color:var(--cinta-osc);font-size:12.5px}
+.corte-placas{display:flex;flex-wrap:wrap;gap:16px}
+.corte-taller{margin-bottom:14px;break-inside:avoid}
+.corte-taller .corte-svg{break-inside:avoid}
+.corte-svg{width:260px;height:auto;display:block}
+.corte-placa{fill:#F6F2E8;stroke:var(--pino);stroke-width:2;vector-effect:non-scaling-stroke}
+.corte-pz{fill:#DDE7D6;stroke:var(--pino-3);stroke-width:1.3;vector-effect:non-scaling-stroke}
+.corte-txt{fill:var(--tinta-2);font-family:var(--mono);font-size:62px;text-anchor:middle;dominant-baseline:central}
+.corte-cap{fill:var(--tinta-2);font-family:var(--mono);font-size:82px;text-anchor:middle}
+@media(max-width:900px){.corte-svg{width:100%;max-width:340px}}
+
+/* ---------- los dos papeles ---------- */
+.salida{display:none;background:#fff;color:#000;padding:26px 30px;max-width:900px;margin:0 auto}
+.doc-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  border-bottom:2px solid var(--pino);padding-bottom:11px;margin-bottom:14px}
+.doc-emp{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.doc-logo{max-height:56px;max-width:200px;display:block;margin-bottom:7px}
+.logo-preview{width:96px;height:56px;border:1px dashed var(--linea);border-radius:var(--r);
+  background:var(--papel) center/contain no-repeat;flex:none}
+.doc-tit{font-family:var(--mono);font-size:12px;letter-spacing:.19em;font-weight:700}
+.doc-min{font-size:11.5px;color:#555;font-family:var(--mono)}
+.doc-cli{font-size:14px;margin-bottom:16px}
+.doc-h{font-family:var(--mono);font-size:10px;letter-spacing:.17em;text-transform:uppercase;
+  color:#555;margin:20px 0 6px}
+.doc-tabla{width:100%;border-collapse:collapse;font-size:13px}
+.doc-tabla th{border-bottom:1.5px solid #000;padding:5px 7px;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;text-align:left;color:#555;font-family:var(--mono);font-weight:500}
+.doc-tabla td{padding:6px 7px;border-bottom:1px solid #E2E0D8;vertical-align:top}
+.doc-tabla td.num,.doc-tabla th.num{text-align:right;font-family:var(--mono)}
+.doc-tabla .grupo td{background:var(--pino);color:#fff;font-family:var(--mono);font-size:10px;
+  letter-spacing:.13em;text-transform:uppercase;padding:4px 7px;border:0}
+.doc-totales{margin:16px 0 0 auto;width:250px;font-size:13.5px}
+.doc-totales > div{display:flex;justify-content:space-between;padding:4px 0}
+.doc-totales > div > span:last-child{font-family:var(--mono)}
+.doc-total{border-top:2px solid var(--pino);margin-top:5px;padding-top:7px!important;
+  font-weight:700;font-size:17px}
+.doc-pie{margin-top:26px;padding-top:12px;border-top:1px solid #DDD;font-size:12px;color:#444}
+.doc-pie p{margin:0 0 4px}
+
+body.imprimiendo .topbar,
+body.imprimiendo .app,
+body.imprimiendo .inferior{display:none!important}
+body.imprimiendo .salida{display:block}
+
+/* barra de la vista previa: solo aparece mirando el papel, nunca al imprimir */
+.barra-papel{display:none;position:sticky;top:0;z-index:40;background:var(--pino);
+  align-items:center;gap:14px;padding:9px 18px;border-bottom:3px solid var(--cinta)}
+.barra-papel .eyebrow{color:#C6B295;margin-right:auto}
+body.imprimiendo .barra-papel{display:flex}
+
+@media print{
+  .topbar,.lateral,.inferior,.borrar,.btn,.aviso,.catalogo,.no-print{display:none!important}
+  body{background:#fff}
+  .bloque{border-color:#999;break-inside:avoid}
+  .grid{grid-template-columns:1fr}
+  .salida{padding:0}
+  .doc-tabla tr{break-inside:avoid}
+  .doc-dibujo{break-inside:avoid;background:#fff}
+  .dibujo{max-height:230px}
+}
+/* Con el dedo (tablet o celular) los campos y botones crecen para tocarse
+   cómodo; con mouse (escritorio) quedan compactos. El mismo programa se
+   adapta según cómo lo uses, sin llenar de aire la pantalla grande. */
+@media(pointer:coarse){
+  input:not([type=checkbox]):not([type=file]),select,textarea{min-height:44px;font-size:16px}
+  .campo input,.campo select{padding:9px 11px}
+  .btn{min-height:44px;font-size:13px;padding:11px 16px}
+  .chip{min-height:44px;padding:10px 14px;font-size:14px}
+  .chip .mas{font-size:15px}
+  .chip-esp{min-height:44px;padding:9px 14px;font-size:13px}
+  .preciotabla input{max-width:150px;padding:8px 10px;text-align:right}
+  .borrar{font-size:22px;padding:8px 11px}
+  .chip-x{font-size:20px;padding:6px 9px}
+  .mueble-cab{padding:14px 13px}
+  .fam-cab,.dec-cab,.grupo-cab{padding-top:13px;padding-bottom:13px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="topbar">
+  <div class="marca">
+    <h1>Presupuestos</h1><span>v0 · melamina</span>
+  </div>
+  <div class="totalbox">
+    <div class="lbl">Total con IVA</div>
+    <div class="val" id="totalTop">$ 0</div>
+  </div>
+</div>
+
+<div class="app">
+<nav class="lateral" aria-label="Secciones del programa">
+  <span class="nav-grupo">Presupuesto en curso</span>
+  <button class="nav-btn" data-vista="presupuesto" aria-current="page">
+    <svg class="nav-ico" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M12 9v12"/></svg><span>Presupuesto</span></button>
+  <button class="nav-btn" data-vista="despiece" aria-current="false">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M3 7l6 6M9 7l-6 6"/><path d="M13 5l6 14M19 5l-6 14"/></svg><span>Despiece y compras</span></button>
+  <span class="nav-grupo">Tu taller</span>
+  <button class="nav-btn" data-vista="archivo" aria-current="false">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg><span>Mis presupuestos</span></button>
+  <button class="nav-btn" data-vista="precios" aria-current="false">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M4 4h8l8 8-8 8-8-8z"/><circle cx="9" cy="9" r="1.4"/></svg><span>Precios y costos</span></button>
+</nav>
+
+<main>
+  <!-- ============ PRESUPUESTO ============ -->
+  <section id="v-presupuesto">
+    <div class="aviso no-print">
+      <div>
+        <b>Los precios que trae cargados son inventados.</b>
+        Andá a <em>Precios y costos</em> y poné los tuyos reales antes de creerle a cualquier número de acá.
+      </div>
+    </div>
+
+    <div class="aviso no-print" id="avisoDoc" style="display:none;background:#EFE7D6;border-color:#D9CBAF;border-left-color:var(--pino-3)"></div>
+
+    <div class="grid">
+      <div>
+        <div class="bloque" id="bloqueMaterial" style="margin-bottom:16px">
+          <header><h2>Material del presupuesto</h2></header>
+          <div class="cuerpo">
+            <div class="campos" id="selectorMaterial"></div>
+            <div class="eyebrow" id="notaMaterial" style="margin-top:9px"></div>
+          </div>
+        </div>
+
+        <div class="bloque" id="bloqueDibujo" style="margin-bottom:16px">
+          <header>
+            <h2>Vista de frente</h2>
+            <span class="eyebrow" style="margin-left:auto">altura de aéreos
+              <input type="number" min="0" step="10" id="hAereos" style="width:66px;padding:2px 5px;margin-left:5px;
+                border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--mono);font-size:12px"> mm</span>
+          </header>
+          <div class="cuerpo" id="cajaDibujo"></div>
+        </div>
+
+        <div class="bloque" style="margin-bottom:16px">
+          <header><h2>Agregar mueble</h2>
+            <button class="btn sec" id="btnImportarPlanilla" style="margin-left:auto;padding:5px 10px;font-size:11px"
+              title="Cargar varios muebles de golpe desde una planilla">Importar planilla</button>
+          </header>
+          <div class="cuerpo">
+            <div class="catalogo" id="catalogo"></div>
+            <div id="cajaImportar" class="oculto"></div>
+          </div>
+        </div>
+
+        <div class="bloque">
+          <header>
+            <h2>Muebles del presupuesto</h2>
+            <span class="eyebrow" id="contadorMuebles" style="margin-left:auto"></span>
+          </header>
+          <div class="cuerpo">
+            <div id="listaMuebles"></div>
+            <div class="vacio" id="vacioMuebles">
+              <p>Todavía no hay muebles.</p>
+              <p class="eyebrow">Elegí uno de arriba para empezar</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="resumen">
+        <div class="bloque">
+          <header><h2>Resumen</h2></header>
+          <div class="cuerpo">
+            <div class="campo ancho" style="margin-bottom:10px">
+              <label>Cliente / obra</label>
+              <input id="cliente" placeholder="Ej: Cocina — Fernández">
+            </div>
+            <div style="display:flex;gap:9px;margin-bottom:12px">
+              <div class="campo"><label>Fecha</label><input type="date" id="fecha" style="width:130px"></div>
+              <div class="campo"><label>Estado</label>
+                <select id="estado" style="width:112px">
+                  <option>Borrador</option><option>Enviado</option><option>Aprobado</option><option>Perdido</option>
+                </select>
+              </div>
+            </div>
+            <div id="resumenLineas"></div>
+            <div class="total-final">
+              <div class="lbl">Total con IVA</div>
+              <div class="val" id="totalFinal">$ 0</div>
+              <div class="pxu" id="totalSinIva"></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px" class="no-print">
+              <button class="btn" id="btnGuardar">Guardar</button>
+              <button class="btn sec" id="btnImpCliente">Papel del cliente</button>
+              <button class="btn sec" id="btnImpTaller">Papel del taller</button>
+              <button class="btn sec" id="btnVaciar">Vaciar</button>
+            </div>
+            <div id="avisoGuardado" class="eyebrow" style="margin-top:8px;color:var(--verde)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DESPIECE ============ -->
+  <section id="v-despiece" class="oculto">
+    <div class="grid">
+      <div class="bloque">
+        <header>
+          <h2>Despiece</h2>
+          <span class="eyebrow" style="margin-left:auto">
+            <span class="canto" style="border-left-color:var(--cinta);border-top-color:var(--cinta)"></span>
+            lados con canto
+          </span>
+        </header>
+        <div class="cuerpo" style="padding:0">
+          <table id="tablaDespiece"></table>
+          <div class="vacio" id="vacioDespiece"><p>Agregá muebles para ver el despiece.</p></div>
+        </div>
+      </div>
+      <div class="bloque">
+        <header><h2>Lista de compras</h2></header>
+        <div class="cuerpo" style="padding:0">
+          <table id="tablaCompras"></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloque" id="bloqueCorte" style="margin-top:20px">
+      <header><h2>Mapa de corte</h2>
+        <span class="eyebrow" style="margin-left:auto">cómo salen las piezas de cada placa · sierra
+          <input type="number" min="0" step="0.5" id="corteKerf" style="width:52px;padding:2px 5px;margin:0 4px;
+            border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--mono);font-size:12px"> mm</span>
+      </header>
+      <div class="cuerpo" id="cajaCorte"></div>
+    </div>
+  </section>
+
+  <!-- ============ ARCHIVO ============ -->
+  <section id="v-archivo" class="oculto">
+    <div class="bloque">
+      <header>
+        <h2>Presupuestos guardados</h2>
+        <div style="margin-left:auto;display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn sec" id="btnExportar" title="Bajar una copia de seguridad de todo">Exportar copia</button>
+          <button class="btn sec" id="btnImportar" title="Volver a cargar una copia de seguridad">Importar copia</button>
+          <button class="btn sec" id="btnNuevo">Nuevo presupuesto</button>
+        </div>
+        <input type="file" id="fileImport" accept="application/json,.json" class="oculto">
+      </header>
+      <div class="cuerpo" style="padding:0">
+        <table id="tablaArchivo"></table>
+        <div class="vacio" id="vacioArchivo">
+          <p>Todavía no guardaste ninguno.</p>
+          <p class="eyebrow">Se guardan con el botón Guardar del resumen</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRECIOS ============ -->
+  <section id="v-precios" class="oculto">
+    <div class="grid">
+      <div>
+        <div class="bloque" style="margin-bottom:16px">
+          <header><h2>Materiales</h2></header>
+          <div class="cuerpo" id="cajaMateriales" style="padding:0"></div>
+        </div>
+        <div class="bloque" style="margin-bottom:16px">
+          <header><h2>Cantos</h2></header>
+          <div class="cuerpo" id="cajaCantos" style="padding:0"></div>
+        </div>
+        <div class="bloque" style="margin-bottom:16px">
+          <header><h2>Herrajes</h2></header>
+          <div class="cuerpo" style="padding:0">
+            <table class="preciotabla" id="tablaHerrajes"></table>
+          </div>
+        </div>
+        <div class="bloque" style="margin-bottom:16px">
+          <header><h2>Tus datos</h2></header>
+          <div class="cuerpo">
+            <div class="campos">
+              <div class="campo ancho"><label>Nombre del taller</label>
+                <input type="text" id="empNombre" placeholder="Carpintería ..."></div>
+              <div class="campo ancho"><label>Teléfono / mail</label>
+                <input type="text" id="empContacto" placeholder="099 ... — mail@..."></div>
+              <div class="campo"><label>Validez (días)</label>
+                <input type="number" min="1" id="validez"></div>
+            </div>
+            <div style="margin-top:14px">
+              <label class="campo" style="display:block;margin-bottom:6px">Logo (sale arriba del presupuesto)</label>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <div id="logoPreview" class="logo-preview" aria-hidden="true"></div>
+                <button class="btn sec" type="button" id="btnLogo">Subir logo</button>
+                <button class="btn sec" type="button" id="btnLogoQuitar" style="display:none">Quitar</button>
+                <input type="file" id="fileLogo" accept="image/png,image/jpeg,image/webp" class="oculto">
+                <span class="eyebrow" style="flex-basis:100%">PNG o JPG. Se achica solo para que no pese. Queda guardado en este navegador.</span>
+              </div>
+            </div>
+            <div class="campo ancho" style="margin-top:12px;width:100%">
+              <label>Condiciones que van en el presupuesto</label>
+              <textarea id="condiciones" rows="4" placeholder="Lo que quieras que salga al pie del presupuesto del cliente." style="width:100%;max-width:none;padding:7px 9px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans);font-size:13px;resize:vertical"></textarea>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:11px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="detallar"> Mostrarle al cliente el precio de cada mueble
+            </label>
+          </div>
+        </div>
+        <div class="bloque" style="margin-bottom:16px">
+          <header><h2>Cómo armás</h2></header>
+          <div class="cuerpo" style="padding:0">
+            <table class="preciotabla" id="tablaArmado"></table>
+          </div>
+          <div style="padding:11px 14px;border-top:1px solid var(--linea);font-size:12.5px;color:var(--tinta-2)">
+            Se define una vez. Cambiarlo recalcula el despiece de todos los muebles.
+          </div>
+        </div>
+        <div class="bloque">
+          <header><h2>Mano de obra</h2></header>
+          <div class="cuerpo" style="padding:0">
+            <table class="preciotabla" id="tablaMO"></table>
+          </div>
+        </div>
+      </div>
+      <div class="bloque">
+        <header><h2>Coeficientes</h2></header>
+        <div class="cuerpo" style="padding:0">
+          <table class="preciotabla" id="tablaCoef"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<nav class="inferior" aria-label="Secciones del programa">
+  <button class="nav-bot" data-vista="presupuesto" aria-current="page">
+    <svg class="nav-ico" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M4 9h16M12 9v12"/></svg><span>Presupuesto</span></button>
+  <button class="nav-bot" data-vista="despiece" aria-current="false">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M3 7l6 6M9 7l-6 6"/><path d="M13 5l6 14M19 5l-6 14"/></svg><span>Despiece</span></button>
+  <button class="nav-bot" data-vista="archivo" aria-current="false">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg><span>Guardados</span></button>
+  <button class="nav-bot" data-vista="precios" aria-current="false">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M4 4h8l8 8-8 8-8-8z"/><circle cx="9" cy="9" r="1.4"/></svg><span>Precios</span></button>
+</nav>
+
+<div id="barraPapel" class="barra-papel no-print">
+  <button class="btn sec" id="btnVolverApp">← Volver</button>
+  <span class="eyebrow" id="tituloPapel"></span>
+  <button class="btn" id="btnImprimirYa">Imprimir</button>
+</div>
+<div id="salida" class="salida"></div>
+
+<script>
+/* ==================================================================
+   ALMACÉN
+   Usa el almacén de Claude si está disponible; si no, cae en el
+   localStorage del navegador. Así guarda igual abierta con doble clic
+   que dentro de Claude. Sin esto, abierta como archivo suelto no
+   guardaba nada y se perdía todo al cerrar la pestaña.
+   ================================================================== */
+if(!window.storage){
+  window.storage = {
+    async get(k){
+      try{ const v = localStorage.getItem(k); return v == null ? null : {value:v}; }
+      catch(e){ return null; }
+    },
+    async set(k, v){
+      try{ localStorage.setItem(k, v); }
+      catch(e){ /* incógnito o sin espacio: sigue andando en memoria */ }
+    }
+  };
+}
+
+/* ==================================================================
+   ESTADO
+   ================================================================== */
+const hoy = () => new Date().toISOString().slice(0,10);
+const fechaLarga = f => {
+  if(!f) return '';
+  const [a,m,d] = f.split('-');
+  return `${d}/${m}/${a}`;
+};
+const CLAVE = 'carpinteria:presupuesto:v1';
+
+/* Versión del catálogo semilla. Al subirla, sembrarCatalogo() agrega los
+   decorados nuevos a quien ya tenga datos, sin pisarle precios ni borrados. */
+const CATALOGO_VERSION = 6;
+
+/* Catálogo de melamínico EGGER como lo vende la barraca (Ontil, jul-2026).
+   Un color no es una placa sola: el mismo decorado viene en varios espesores
+   y a veces en dos medidas distintas, cada una con su precio. Por eso cada
+   decorado guarda una lista de PRESENTACIONES {esp, ancho, alto, precio}.
+   Los precios van en 0 — los carga el taller. El Blanco trae los de ejemplo
+   para que la prueba del CLAUDE.md siga dando lo mismo. */
+const MED_STD = [1830, 2600];   // 2,60 × 1,83 — la medida de casi todo
+const MED_ANCHA = [1850, 2750]; // 2,75 × 1,85 — solo Blanco y Negro de 18
+const ESPESOR_CAJON = 18;       // la caja del cajón (laterales y frente interno) va en este espesor
+
+/* Los colores se juntan por familia de color, y los símil madera por especie,
+   que es como se piden en la barraca ("mostrame los robles"). El grupo es un
+   dato del color, no una regla escondida en el código. */
+const GRUPOS_MEL = {
+  blancos:'Blancos', grises:'Grises', negros:'Negros',
+  robles:'Robles', nogales:'Nogales', pinos:'Pinos', otras_maderas:'Otras maderas',
+  tierras:'Beiges y tierras', metalizados:'Metalizados', piedra:'Piedra y hormigón',
+  colores:'Colores', otros:'Otros'
+};
+
+function decoradosMelamina(){
+  /* grupo: [id, nombre, espesores en medida estándar, presentaciones extra [esp, medida]] */
+  const L = {
+    blancos: [
+      ['blanco','Blanco', [6, 9, 12, 15, 18], [[18, MED_ANCHA]]],
+      ['blanco_1cara','Blanco 1 cara', [5.5, 18]],
+      ['laca_blanco','Blanco Laca', [18]],
+      ['lino_blanco','Lino Blanco', [5.5, 18]],
+      ['chromix_blanco','Chromix Blanco', [18]]
+    ],
+    grises: [
+      ['gris_arcilla','Gris Arcilla', [18]],
+      ['gris_cubanita','Gris Cubanita', [5.5, 18]],
+      ['gris_macadan','Gris Macadán', [18]],
+      ['gris_perla','Gris Perla', [5.5, 18]],
+      ['gris_sombra','Gris Sombra', [5.5, 18]],
+      ['grafite','Gris Grafito', [18]],
+      ['lino_antracita','Lino Antracita', [18]],
+      ['textil_gris','Textil Gris', [5.5, 18]]
+    ],
+    negros: [
+      ['negro','Negro', [18], [[18, MED_ANCHA]]],
+      ['negro_metalizado','Negro Metálico', [18]],
+      ['negro_veteado','Negro Veteado', [18]],
+      ['negro_brillo','Negro Brillo', [18]]
+    ],
+    robles: [
+      ['roble_bardolino','Roble Bardolino Natural', [18]],
+      ['roble_davos_natural','Roble Davos Natural', [18]],
+      ['roble_davos_trufa','Roble Davos Marrón Trufa', [18]],
+      ['roble_nebraska_natural','Roble de Nebraska Natural', [5.5, 18]],
+      ['roble_nebraska_gris','Roble de Nebraska Gris', [18]],
+      ['roble_denver_trufa','Roble Denver Marrón Trufa', [18]],
+      ['roble_kendal_natural','Roble Kendal Natural', [5.5, 18]],
+      ['roble_kendal_conac','Roble Kendal Coñac', [18]],
+      ['roble_kendal_encerado','Roble Kendal Encerado', [5.5, 18]],
+      ['roble_lorenzo','Roble Lorenzo Arena', [18]],
+      ['roble_norwich','Roble Norwich', [18]],
+      ['roble_vicenza','Roble Vicenza Gris', [18]],
+      ['roble_whiteriver_beige','Roble Whiteriver Beige Arena', [18]],
+      ['roble_whiteriver_gris','Roble Whiteriver Gris Marrón', [18]],
+      ['roble_kaiserberg','Roble Kaiserberg', [18]],
+      ['roble_termo_negro','Roble Termo Negro', [18]]
+    ],
+    nogales: [
+      ['nogal_lincoln','Nogal Lincoln', [5.5, 18]],
+      ['nogal_pacifico','Nogal del Pacífico Natural', [18]],
+      ['nogal_warmia','Nogal Warmia Marrón', [18]]
+    ],
+    pinos: [
+      ['pino_aland_blanco','Pino Aland Blanco', [18]],
+      ['pino_aland_polar','Pino Aland Polar', [18]],
+      ['pino_cascina','Pino Cascina', [18]]
+    ],
+    otras_maderas: [
+      ['castano_kentucky','Castaño Kentucky Arena', [18]],
+      ['cerezo_locarno','Cerezo Locarno', [18]],
+      ['coco_bolo','Coco Bolo', [18]],
+      ['hickory_natural','Hickory Natural', [5.5, 18]]
+    ],
+    tierras: [
+      ['lino_topo','Lino Topo', [5.5, 18]],
+      ['textil_beige','Textil Beige', [18]]
+    ],
+    metalizados: [
+      ['chromix_plata','Chromix Plata', [18]],
+      ['fineline_antracita','Fineline Metallic Antracita', [18]],
+      ['metallic_inox','Metallic Inox', [18]],
+      ['metal_bronce','Metal Cepillado Bronce', [18]],
+      ['metal_oro','Metal Cepillado Oro', [18]]
+    ],
+    piedra: [
+      ['hormigon_chicago','Hormigón Chicago Gris Oscuro', [18]],
+      ['pietra_grigia','Pietra Grigia Negro', [18]]
+    ],
+    colores: [
+      ['amarillo_girasol','Amarillo Girasol', [18]],
+      ['naranja_siena','Naranja de Siena', [18]],
+      ['rojo_cereza','Rojo Cereza', [18]],
+      ['rosa_antigua','Rosa Antigua', [18]],
+      ['azul_cosmico','Azul Cósmico', [18]],
+      ['verde_kiwi','Verde Kiwi', [18]]
+    ]
+  };
+  const ejemplo = {blanco: {18:4500, 15:3900}};   // para que la prueba de siempre siga cerrando
+  const o = {};
+  for(const [g, lista] of Object.entries(L)){
+    for(const [id, n, esps, extra = []] of lista){
+      const pres = esps.map(esp => nuevaPres(esp, MED_STD, (ejemplo[id]||{})[esp] || 0));
+      for(const [esp, med] of extra) pres.push(nuevaPres(esp, med, 0));
+      pres.sort((a,b) => a.esp - b.esp || a.ancho - b.ancho);
+      o[id] = {n, g, pres, veta: VETA_GRUPOS_MEL.has(g)};
+    }
+  }
+  return o;
+}
+
+/* Los grupos símil madera tienen veta (hay que respetar la dirección al cortar);
+   los lisos, grises, negros y colores no, así que se pueden girar. */
+const VETA_GRUPOS_MEL = new Set(['robles','nogales','pinos','otras_maderas']);
+
+const nuevaPres = (esp, med, precio = 0) =>
+  ({esp:+esp, ancho:med[0], alto:med[1], precio:+precio});
+
+/* ------------------------------------------------------------------
+   MADERA MACIZA
+   No se vende por metro cuadrado de placa sino por volumen: por PIE
+   (1' × 1' × 1", o sea 0,00235974 m³) y a veces por TABLA entera.
+   Cada madera guarda sus espesores; el espesor de la madera elegida es
+   el que manda en el despiece, porque una tabla de 1" no es una placa
+   de 18 mm. Los precios los carga cada taller.
+   ------------------------------------------------------------------ */
+const M3_POR_PIE = 0.00235974;
+const PULGADA = 25.4;
+
+/* espesor por defecto 1"; tabla nominal de 3,00 m × 15 cm (la corrige el taller) */
+const nuevaTabla = (pulg = 1, largo = 3000, ancho = 150) =>
+  ({esp: +(pulg*PULGADA).toFixed(1), largo, ancho, preciopie:0, preciotabla:0, venta:'pie'});
+
+/* 25,4 mm se lee 1", 19 mm se lee 3/4" — como lo pide el carpintero */
+const PULGADAS_TXT = {12.7:'1/2"', 15.9:'5/8"', 19:'3/4"', 22.2:'7/8"', 25.4:'1"',
+  31.8:'1 1/4"', 38.1:'1 1/2"', 44.5:'1 3/4"', 50.8:'2"', 63.5:'2 1/2"', 76.2:'3"'};
+const espesorTxt = mm => PULGADAS_TXT[+(+mm).toFixed(1)] ||
+  (String(+(+mm).toFixed(1)).replace('.', ',') + ' mm');
+
+/* Las maderas se juntan por especie y por para qué se usan, que es como las
+   pide el carpintero. Si el taller quiere otro orden, cada madera tiene su
+   grupo editable igual que los colores. */
+const GRUPOS_MAD = {
+  pinos:'Pinos', robles:'Robles', cedros:'Cedros', eucaliptos:'Eucaliptos y finger',
+  duras:'Duras y tropicales', livianas:'Livianas y claras', finas:'Finas para mueble',
+  otros:'Otras'
+};
+
+function maderasMacizas(){
+  const L = {
+    pinos: [
+      ['pino_elliottis','Pino Elliottis'], ['pino_tratado','Pino Tratado'],
+      ['pino_cca','Pino CCA'], ['pino_mca','Pino MCA'],
+      ['pino_amarillo','Pino Amarillo'], ['pino_amarillo_s4s','Pino Amarillo S4S'],
+      ['stud_pino','Stud Pino']
+    ],
+    robles: [
+      ['roble','Roble'], ['roble_blanco','Roble Blanco'], ['roble_glaciar','Roble Glaciar']
+    ],
+    cedros: [
+      ['cedro','Cedro'], ['cedro_mara','Cedro Mara'], ['jequetiba','Jequetibá / Cedro Real']
+    ],
+    eucaliptos: [
+      ['eucalipto','Eucalipto'], ['eucalipto_clear','Eucalipto Clear'],
+      ['eucalipto_fj','Eucalipto Finger Joint'], ['finger_exterior','Finger Exterior']
+    ],
+    duras: [
+      ['lapacho_boliviano','Lapacho Boliviano'], ['lapacho_amarillo','Lapacho Amarillo'],
+      ['tatajuba','Tatajuba'], ['grapia','Grapia'], ['tali','Tali'], ['yesquero','Yesquero']
+    ],
+    livianas: [
+      ['alamo','Álamo'], ['abeto','Abeto'], ['marupa','Marupá'], ['okume','Okumé']
+    ],
+    finas: [
+      ['nogal','Nogal'], ['fresno','Fresno'], ['haya','Haya']
+    ]
+  };
+  const o = {};
+  for(const [g, lista] of Object.entries(L))
+    for(const [id, n] of lista) o[id] = {n, g, pres:[nuevaTabla(1)], veta:true};   // la madera siempre tiene veta
+  return o;
+}
+
+/* ------------------------------------------------------------------
+   CANTOS (Ontil, jul-2026)
+   Tres familias distintas: el melamínico que va con la placa, el de madera
+   natural para tapar cantos a la vista, y el Chapafazil, que es lámina de
+   madera en rollo para enchapar. Cada tipo viene en 22 y 50 mm de ancho.
+   El melamínico y el de madera se cobran por metro; el Chapafazil por rollo
+   entero, así que cada ancho dice cómo se paga.
+   ------------------------------------------------------------------ */
+const GRUPOS_CANTO = {
+  melaminico:'Melamínicos', madera:'De madera', chapa:'Chapafazil (enchapar)', otros:'Otros'
+};
+
+const nuevoAncho = (ancho, venta = 'metro', largoRollo = 0, precio = 0) =>
+  ({ancho:+ancho, precio:+precio, venta, largoRollo:+largoRollo});
+
+function cantosDeCatalogo(){
+  const L = {
+    melaminico: [
+      ['mel_blanco_sincola','Blanco sin cola', [22]],
+      ['mel_blanco_cola','Blanco con cola', [22, 50]],
+      ['mel_madera','Madera', [22, 50]],
+      ['mel_colores','Colores con cola', [22, 50]]
+    ],
+    madera: [
+      ['mad_cola','Madera con cola', [22, 50]],
+      ['mad_soporte','Madera con soporte', [22, 50]],
+      ['mad_roble_cola','Roble con cola', [22, 50]],
+      ['mad_roble_soporte','Roble con soporte', [22, 50]]
+    ]
+  };
+  /* el Chapafazil viene en rollo: [id, nombre, metros del rollo] */
+  const rollos = [
+    ['chapa_cedrino','Cedriño', 100],
+    ['chapa_cedrino_cola','Cedriño con cola', 100],
+    ['chapa_cerejeira_cola','Cerejeira con cola', 100],
+    ['chapa_guatambu','Guatambú', 100],
+    ['chapa_guatambu_cola','Guatambú con cola', 100],
+    ['chapa_jequetiba','Jequetibá', 200],
+    ['chapa_jequetiba_cola','Jequetibá con cola', 100],
+    ['chapa_roble_cola','Roble con cola', 100]
+  ];
+
+  // el canto por defecto trae un precio de ejemplo (como el Blanco de melamina),
+  // así el presupuesto de prueba sigue cerrando y arranca cobrando el canto
+  const ejemplo = {mel_blanco_cola: {22: 35}};
+  const o = {};
+  for(const [g, lista] of Object.entries(L))
+    for(const [id, n, anchos] of lista)
+      o[id] = {n, g, pres: anchos.map(a => nuevoAncho(a, 'metro', 0, (ejemplo[id]||{})[a] || 0))};
+  for(const [id, n, largo] of rollos)
+    o[id] = {n, g:'chapa', pres: [nuevoAncho(0, 'rollo', largo)]};
+  return o;
+}
+
+/* Dos presentaciones son "la misma" si coinciden espesor y medida. En la
+   madera alcanza el espesor: el ancho de la tabla lo ajusta cada taller. */
+const mismaPres = (a, b) => (a.venta || b.venta)
+  ? +a.esp === +b.esp
+  : (+a.esp === +b.esp && +a.ancho === +b.ancho && +a.alto === +b.alto);
+
+/* Los decorados viejos guardaban {anchoP, altoP, precio18, precio15}.
+   Se traducen a la lista de presentaciones sin perder los precios cargados. */
+function migrarDecorado(d){
+  if(!d) return {n:'—', pres:[]};
+  if(Array.isArray(d.pres)) return d;      // ya está en el formato nuevo (melamina o madera)
+  const med = [+d.anchoP || MED_STD[0], +d.altoP || MED_STD[1]];
+  return {n: d.n, pres: [nuevaPres(18, med, d.precio18), nuevaPres(15, med, d.precio15)]};
+}
+
+const inicial = () => ({
+  empresa: {id:null, nombre:'', contacto:'', logo:''},
+  cliente: '',
+  fecha: hoy(),
+  estado: 'Borrador',
+  validez: 0,          // vacío: la línea de validez sale solo si el taller la pone
+  detallarPrecios: true,
+  // Vacío a propósito: las condiciones se imprimen en el presupuesto del
+  // cliente, así que las escribe el taller. Ningún texto de ejemplo puede
+  // salir firmado como si fuera suyo.
+  condiciones: '',
+  docId: null,
+  docNumero: null,
+  proximoNumero: 1,
+  guardados: [],
+  muebles: [],
+  // Modelos que el taller guarda de un presupuesto para reusar: cada uno es
+  // un tipo de mueble con sus medidas ya cargadas. Se elige y solo se cambian
+  // las medidas para el próximo cliente. Viaja en el backup como todo lo demás.
+  modelosGuardados: [],
+  // MDF de fondo: no cambia con el decorado, va aparte
+  placas: {
+    fondo: {n:'MDF 5,5 mm (fondos)', anchoP:1830, altoP:2600, precio:1800}
+  },
+  // Materiales por familia. Cada decorado guarda su medida de placa y su
+  // precio por espesor. El cuerpo del mueble sale del decorado elegido; los
+  // cajones salen del decorado de interior, que se elige en Precios.
+  materiales: {
+    melamina: {nombre:'Melamina', tipo:'placa',  opciones: decoradosMelamina()},
+    madera:   {nombre:'Madera',   tipo:'maciza', opciones: maderasMacizas()}
+  },
+  catalogoVersion: CATALOGO_VERSION,
+  decoradosQuitados: [],                         // los que el taller borró a mano: no vuelven solos
+  // material del presupuesto: 'esp' manda en la madera, 'ancho/alto' en la melamina
+  materialSel: {fam:'melamina', id:'blanco', esp:null, ancho:null, alto:null},
+  interiorId: 'blanco',                          // decorado de los interiores de cajón (15 mm)
+  // El canto va aparte de los herrajes: se mide en metros y sale del despiece,
+  // no de una cuenta de unidades por mueble. Es un catálogo propio, con la
+  // misma forma que los melamínicos: un tipo con varios anchos.
+  cantos: cantosDeCatalogo(),
+  cantoSel: {id:'mel_blanco_cola', ancho:22},
+  herrajes: {
+    bisagra:  {n:'Bisagra codo',    u:'un', precio:90},
+    corredera:{n:'Corredera 45 cm', u:'jgo',precio:380},
+    tirador:  {n:'Tirador',         u:'un', precio:150},
+    regaton:  {n:'Regatón',         u:'un', precio:20},
+    tornillo: {n:'Tornillería / cola (por mueble)', u:'gl', precio:120}
+  },
+  mo: {
+    taller:     {n:'Hora de taller — lo que le cobrás al cliente',     precio:600},
+    colocacion: {n:'Hora de colocación — lo que le cobrás al cliente', precio:700}
+  },
+  alturaAereos: 1400,
+  armado: {
+    pasante: 'laterales',
+    espesor: 18,
+    fondo: 'superpuesto',
+    tapa: 'travesanos',
+    ranura: 7,
+    luzPuerta: 3,
+    corte: 4                  // ancho de sierra (mm) para el mapa de corte
+  },
+  coef: {
+    desperdicio: {n:'Desperdicio de placa',      v:15, u:'%'},
+    ganancia:    {n:'Ganancia sobre materiales', v:30, u:'%'},
+    iva:         {n:'IVA',                       v:22, u:'%'}
+  }
+});
+
+let S = inicial();
+let vista = 'presupuesto';
+
+/* Precios congelados del presupuesto abierto (null = catálogo de hoy).
+   Un presupuesto guardado se calcula SIEMPRE con los precios del día que se
+   guardó, así el número que le mandaste al cliente no cambia si después subís
+   la placa. Para recotizar a precios de hoy está el botón Duplicar. */
+let docPrecios = null;
+const PC = () => docPrecios || S;               // contexto de precios activo
+const clon = o => JSON.parse(JSON.stringify(o));
+
+/* ==================================================================
+   MATERIALES — de "rol" a placa concreta
+   Los módulos hablan de roles ('cuerpo', 'interior', 'fondo'); acá se
+   traduce cada rol a la placa real (nombre, medida y precio) según el
+   material elegido y el espesor. Así se puede cambiar el decorado sin
+   tocar ni una fórmula de mueble.
+   ================================================================== */
+const primerDecorado = fam => (fam && fam.opciones) ? Object.keys(fam.opciones)[0] : null;
+
+const DEC_VACIO = {n:'—', pres:[]};
+
+function decoradoElegido(ctx){
+  const sel = ctx.materialSel || {fam:'melamina', id:null};
+  const fam = ctx.materiales[sel.fam] || ctx.materiales.melamina || {opciones:{}};
+  const id = (fam.opciones && fam.opciones[sel.id]) ? sel.id : primerDecorado(fam);
+  return (fam.opciones && fam.opciones[id]) || DEC_VACIO;
+}
+
+function decoradoInterior(ctx){
+  const mel = ctx.materiales.melamina || {opciones:{}};
+  // "mismo que el mueble": la caja del cajón va en el decorado del cuerpo
+  // (solo si el cuerpo es melamina; en madera la caja igual va en melamina)
+  if(ctx.interiorId === '__cuerpo__' && !esMaciza(famElegida(ctx))) return decoradoElegido(ctx);
+  return mel.opciones[ctx.interiorId] || mel.opciones[primerDecorado(mel)] || DEC_VACIO;
+}
+
+/* Las presentaciones de un decorado en cierto espesor (puede haber más de una
+   medida de placa: el Blanco de 18 viene en 2,60×1,83 y en 2,75×1,85). */
+const presDeEspesor = (dec, esp) => (dec.pres || []).filter(p => +p.esp === +esp);
+
+/* La presentación concreta que se usa: la de la medida elegida si existe,
+   si no la primera. Devuelve null si el color no viene en ese espesor. */
+function presElegida(dec, esp, medida){
+  const c = presDeEspesor(dec, esp);
+  if(!c.length) return null;
+  if(medida && medida.ancho){
+    const m = c.find(p => +p.ancho === +medida.ancho && +p.alto === +medida.alto);
+    if(m) return m;
+  }
+  return c[0];
+}
+
+/* mapa de placas efectivas para el contexto: lo que consume el cálculo.
+   Si el color no existe en ese espesor, la placa sale con precio 0 y el
+   nombre lo dice, para que no pase desapercibido en el papel del taller. */
+function placaDeRol(dec, esp, medida, sufijo){
+  const p = presElegida(dec, esp, medida);
+  const mm = String(esp).replace('.', ',');
+  if(!p) return {n:`${dec.n} ${mm} mm — NO VIENE EN ESTE ESPESOR${sufijo||''}`, unidad:'placa',
+                 anchoP:MED_STD[0], altoP:MED_STD[1], precio:0, falta:true, veta:false};
+  return {n:`${dec.n} ${mm} mm${sufijo||''}`, unidad:'placa',
+          anchoP:p.ancho, altoP:p.alto, precio:+p.precio || 0, veta: !!dec.veta};
+}
+
+/* dos roles caen en la MISMA placa si son placa, misma medida y mismo precio
+   (ej. cajón "mismo que el mueble": el interior queda igual que el cuerpo) */
+const mismaPlaca = (a, b) => a && b && a.unidad === 'placa' && b.unidad === 'placa'
+  && +a.anchoP === +b.anchoP && +a.altoP === +b.altoP && +a.precio === +b.precio;
+
+/* la familia elegida para este presupuesto */
+const famElegida = ctx => ctx.materiales[(ctx.materialSel||{}).fam] || ctx.materiales.melamina || {opciones:{}};
+const esMaciza = fam => !!fam && fam.tipo === 'maciza';
+
+/* la tabla elegida de una madera: la del espesor pedido, si no la primera */
+const tablaElegida = (dec, esp) =>
+  (dec.pres || []).find(p => +p.esp === +esp) || (dec.pres || [])[0] || null;
+
+function maderaDeRol(dec, esp){
+  const p = tablaElegida(dec, esp);
+  if(!p) return {n:`${dec.n} — SIN ESPESORES CARGADOS`, unidad:'placa',
+                 anchoP:MED_STD[0], altoP:MED_STD[1], precio:0, falta:true};
+  const porTabla = p.venta === 'tabla';
+  const precio = +(porTabla ? p.preciotabla : p.preciopie) || 0;
+  return {n:`${dec.n} ${espesorTxt(p.esp)}`, unidad: porTabla ? 'tabla' : 'pie',
+          esp:+p.esp, largoT:+p.largo, anchoT:+p.ancho, precio};
+}
+
+/* El espesor del cuerpo: en melamina lo elige "Cómo armás"; en madera maciza
+   lo manda la tabla elegida, porque de ahí salen todas las restas del despiece. */
+function espesorCuerpo(ctx){
+  if(esMaciza(famElegida(ctx))){
+    const p = tablaElegida(decoradoElegido(ctx), (ctx.materialSel||{}).esp);
+    if(p) return +p.esp;
+  }
+  return (+ctx.armado.espesor === 15) ? 15 : 18;
+}
+
+/* el "Cómo armás" con el espesor que corresponde al material elegido */
+const armadoEfectivo = ctx => ({...ctx.armado, espesor: espesorCuerpo(ctx)});
+
+function placasEfectivas(ctx){
+  const sel = ctx.materialSel || {};
+  const fam = famElegida(ctx);
+  const dec = decoradoElegido(ctx);
+  const e = espesorCuerpo(ctx);
+  return {
+    cuerpo:   esMaciza(fam) ? maderaDeRol(dec, sel.esp)
+                            : placaDeRol(dec, e, {ancho:sel.ancho, alto:sel.alto}),
+    // los cajones y el fondo no cambian con el material del cuerpo
+    interior: placaDeRol(decoradoInterior(ctx), ESPESOR_CAJON, null, ' (cajón)'),
+    fondo:    {...ctx.placas.fondo, unidad:'placa', veta:false}
+  };
+}
+
+/* ------------------------------------------------------------------
+   CANTOS
+   El canto elegido para el presupuesto. Se cobra por metro y la cantidad
+   sale de los lados cantados del despiece.
+   ------------------------------------------------------------------ */
+const primerCanto = ctx => Object.keys(ctx.cantos || {})[0] || null;
+
+/* el canto elegido, con su ancho: {n, u, precio, venta, largoRollo} */
+function cantoActivo(ctx){
+  const sel = ctx.cantoSel || {};
+  const cantos = ctx.cantos || {};
+  const c = cantos[sel.id] || cantos[primerCanto(ctx)];
+  if(!c) return {n:'Canto — sin cargar', u:'m', precio:0, venta:'metro', largoRollo:0};
+  const pres = (c.pres || []);
+  const p = pres.find(x => +x.ancho === +sel.ancho) || pres[0];
+  if(!p) return {n:c.n + ' — sin anchos', u:'m', precio:0, venta:'metro', largoRollo:0};
+  const rollo = p.venta === 'rollo';
+  return {
+    n: c.n + (p.ancho > 0 ? ` ${p.ancho} mm` : '') + (rollo ? ` (rollo ${p.largoRollo} m)` : ''),
+    u:'m', precio:+p.precio || 0, venta: rollo ? 'rollo' : 'metro', largoRollo:+p.largoRollo || 0
+  };
+}
+
+/* lo que sale un metro de ese canto, se venda como se venda */
+function precioPorMetroCanto(c){
+  if(c.venta === 'rollo') return c.largoRollo > 0 ? c.precio / c.largoRollo : 0;
+  return c.precio;
+}
+
+/* Cuánto canto hay que comprar. Se le suma un 10% de sobra, que es lo que se
+   pierde al pegarlo y recortarlo. Por rollo se compran rollos enteros. */
+function comprarCanto(ctx, ml){
+  const c = cantoActivo(ctx);
+  const metros = Math.ceil(ml * 1.1);
+  if(c.venta === 'rollo' && c.largoRollo > 0){
+    const n = Math.ceil(metros / c.largoRollo);
+    return {q: metros, costo: n * c.precio, detalle: `${n} rollo${n===1?'':'s'} · ${metros} m`};
+  }
+  return {q: metros, costo: metros * c.precio, detalle: `${nf1.format(metros)} m`};
+}
+
+/* nombre, unidad y precio de una línea de compra, sea canto o herraje */
+const itemDeCompra = (ctx, k) => k === 'canto' ? cantoActivo(ctx) : ctx.herrajes[k];
+
+/* Lo que sale un metro cuadrado de ese material, sea como sea que se venda.
+   Sirve para repartir el costo entre los muebles del presupuesto. */
+function precioPorM2(P){
+  if(P.unidad === 'pie') return (P.esp/1000) / M3_POR_PIE * P.precio;
+  if(P.unidad === 'tabla'){
+    const volTabla = (P.largoT * P.anchoT * P.esp) / 1e9;
+    return volTabla > 0 ? (P.esp/1000) / volTabla * P.precio : 0;
+  }
+  const areaPlaca = (P.anchoP * P.altoP) / 1e6;
+  return areaPlaca > 0 ? P.precio / areaPlaca : 0;
+}
+
+/* Cuánto material hay que comprar y cuánto cuesta, según cómo lo venda la
+   barraca. La placa se compra entera y el desperdicio va sobre la superficie;
+   la madera por pie se paga por lo que se usa; por tabla se compra entera. */
+function comprarMaterial(P, m2, desp){
+  if(P.unidad === 'pie'){
+    const pies = (m2 * (P.esp/1000)) / M3_POR_PIE * desp;
+    return {n: pies, costo: pies * P.precio, detalle: nf1.format(pies) + ' pies'};
+  }
+  if(P.unidad === 'tabla'){
+    const volTabla = (P.largoT * P.anchoT * P.esp) / 1e9;
+    const n = volTabla > 0 ? Math.ceil((m2 * (P.esp/1000) * desp) / volTabla - 1e-9) : 0;
+    return {n, costo: n * P.precio, detalle: n + ' tabla' + (n===1?'':'s')};
+  }
+  const areaPlaca = (P.anchoP * P.altoP) / 1e6;
+  const n = areaPlaca > 0 ? Math.ceil((m2 * desp) / areaPlaca - 1e-9) : 0;
+  return {n, costo: n * P.precio, detalle: n + ' placa' + (n===1?'':'s')};
+}
+
+/* ==================================================================
+   CÓMO ARMA CADA TALLER
+   Estos cinco ajustes cambian las fórmulas de TODOS los muebles.
+   Se definen una vez por empresa, no una vez por presupuesto.
+   ================================================================== */
+const ARMADO_OPCIONES = {
+  pasante: {
+    n: 'Qué pieza pasa de punta a punta',
+    op: {laterales:'Laterales pasantes (armado por fuera)', horizontales:'Piso y techo pasantes (armado por dentro)'}
+  },
+  espesor: {n:'Espesor del cuerpo', op:{18:'18 mm', 15:'15 mm'}},
+  fondo:   {n:'Fondo', op:{superpuesto:'Superpuesto (clavado atrás)', ranurado:'Ranurado'}},
+  tapa:    {n:'Cierre superior del bajo mesada', op:{travesanos:'Dos travesaños', completa:'Tapa entera'}}
+};
+
+/* el cuerpo del mueble usa el rol 'cuerpo'; el espesor lo resuelve
+   placasEfectivas() según "Cómo armás". Antes elegía mel15/mel18 acá. */
+const matCuerpo = C => 'cuerpo';
+
+/* carcasa común: laterales, horizontales, travesaños y fondo */
+function carcasa(A, H, P, C, opt){
+  const e = +C.espesor, m = matCuerpo(C), pz = [];
+  const tapaEntera = (opt.tapa || C.tapa) === 'completa';
+  const nHor = tapaEntera ? 2 : 1;               // horizontales de ancho completo
+  const nomHor = tapaEntera ? 'Piso / techo' : 'Piso';
+  const cFrente = {t:0,b:0,l:1,r:0};
+
+  if(C.pasante === 'laterales'){
+    pz.push({nombre:'Lateral', mat:m, largo:H,       ancho:P, cant:2,    cantos:cFrente});
+    pz.push({nombre:nomHor,    mat:m, largo:A - 2*e, ancho:P, cant:nHor, cantos:cFrente});
+  }else{
+    pz.push({nombre:nomHor,    mat:m, largo:A,          ancho:P, cant:nHor, cantos:cFrente});
+    pz.push({nombre:'Lateral', mat:m, largo:H - nHor*e, ancho:P, cant:2,    cantos:cFrente});
+  }
+  if(!tapaEntera && opt.travesanos !== false)
+    pz.push({nombre:'Travesaño sup.', mat:m, largo:A - 2*e, ancho:100, cant:2, cantos:cFrente});
+
+  if(opt.fondo !== false){
+    if(C.fondo === 'ranurado'){
+      const r = +C.ranura || 7;
+      pz.push({nombre:'Fondo (ranurado)', mat:'fondo',
+        largo:A - 2*e + 2*r, ancho:H - nHor*e + 2*r, cant:1, cantos:{t:0,b:0,l:0,r:0}});
+    }else{
+      pz.push({nombre:'Fondo (superpuesto)', mat:'fondo',
+        largo:A, ancho:H, cant:1, cantos:{t:0,b:0,l:0,r:0}});
+    }
+  }
+  return pz;
+}
+
+const puertas = (A, H, C, n) => {
+  const l = +C.luzPuerta || 3;
+  return {nombre:'Puerta', mat:matCuerpo(C), largo:H - l, ancho:A/n - l, cant:n, cantos:{t:1,b:1,l:1,r:1}};
+};
+
+/* ==================================================================
+   MODELOS DE MUEBLE
+   ================================================================== */
+const MODELOS = {
+  bajo: {
+    nombre: 'Bajo mesada 2 puertas',
+    fila: 'bajo',
+    med: {ancho:800, alto:850, prof:580},
+    horas: {taller:3.5, colocacion:1},
+    calc(m, C){
+      const {ancho:A, alto:H, prof:P} = m, e = +C.espesor;
+      return {
+        piezas: [
+          ...carcasa(A, H, P, C, {}),
+          {nombre:'Estante', mat:matCuerpo(C), largo:A - 2*e, ancho:P - 20, cant:1, cantos:{t:0,b:0,l:1,r:0}},
+          puertas(A, H, C, 2)
+        ],
+        herrajes: {bisagra:4, tirador:2, regaton:4, tornillo:1}
+      };
+    }
+  },
+  alacena: {
+    nombre: 'Alacena 2 puertas',
+    fila: 'aereo',
+    med: {ancho:800, alto:700, prof:330},
+    horas: {taller:3, colocacion:1.2},
+    calc(m, C){
+      const {ancho:A, alto:H, prof:P} = m, e = +C.espesor;
+      return {
+        piezas: [
+          ...carcasa(A, H, P, C, {tapa:'completa'}),
+          {nombre:'Estante', mat:matCuerpo(C), largo:A - 2*e, ancho:P - 20, cant:1, cantos:{t:0,b:0,l:1,r:0}},
+          puertas(A, H, C, 2)
+        ],
+        herrajes: {bisagra:4, tirador:2, tornillo:1}
+      };
+    }
+  },
+  cajonera: {
+    nombre: 'Cajonera 3 cajones',
+    fila: 'bajo',
+    med: {ancho:600, alto:850, prof:580},
+    horas: {taller:5.5, colocacion:1},
+    calc(m, C){
+      const {ancho:A, alto:H, prof:P} = m, e = +C.espesor, l = +C.luzPuerta || 3;
+      const luzCaja = A - 2*e - 26;        // 13 mm por lado de corredera
+      const frenteInt = luzCaja - 2*ESPESOR_CAJON;    // descuenta los dos laterales de caja
+      return {
+        piezas: [
+          ...carcasa(A, H, P, C, {}),
+          {nombre:'Frente de cajón', mat:matCuerpo(C), largo:A - 2*l,   ancho:H/3 - 4, cant:3, cantos:{t:1,b:1,l:1,r:1}},
+          {nombre:'Lateral de caja', mat:'interior',   largo:P - 50,    ancho:120,     cant:6, cantos:{t:1,b:0,l:0,r:0}},
+          {nombre:'Frente de caja',  mat:'interior',   largo:frenteInt, ancho:120,     cant:6, cantos:{t:1,b:0,l:0,r:0}},
+          {nombre:'Fondo de caja',   mat:'fondo',      largo:luzCaja,   ancho:P - 50,  cant:3, cantos:{t:0,b:0,l:0,r:0}}
+        ],
+        herrajes: {corredera:3, tirador:3, regaton:4, tornillo:1}
+      };
+    }
+  },
+  estanteria: {
+    nombre: 'Estantería',
+    fila: 'alto',
+    med: {ancho:900, alto:1800, prof:320, estantes:4},
+    horas: {taller:2.5, colocacion:0.8},
+    calc(m, C){
+      const {ancho:A, alto:H, prof:P, estantes:N} = m, e = +C.espesor;
+      return {
+        piezas: [
+          ...carcasa(A, H, P, C, {tapa:'completa', travesanos:false}),
+          {nombre:'Estante', mat:matCuerpo(C), largo:A - 2*e - 2, ancho:P - 15,
+            cant:Math.max(0, +N || 0), cantos:{t:0,b:0,l:1,r:0}}
+        ],
+        herrajes: {tornillo:1}
+      };
+    }
+  },
+  placard: {
+    nombre: 'Placard 2 puertas',
+    fila: 'alto',
+    med: {ancho:1600, alto:2400, prof:600},
+    horas: {taller:9, colocacion:3},
+    calc(m, C){
+      const {ancho:A, alto:H, prof:P} = m, e = +C.espesor;
+      const medio = (A - 3*e)/2;
+      return {
+        piezas: [
+          ...carcasa(A, H, P, C, {tapa:'completa'}),
+          {nombre:'Tabique divisor', mat:matCuerpo(C), largo:H - 2*e, ancho:P,      cant:1, cantos:{t:0,b:0,l:1,r:0}},
+          {nombre:'Estante',         mat:matCuerpo(C), largo:medio,   ancho:P - 20, cant:5, cantos:{t:0,b:0,l:1,r:0}},
+          puertas(A, H, C, 2)
+        ],
+        herrajes: {bisagra:8, tirador:2, regaton:6, tornillo:2}
+      };
+    }
+  },
+  libre: {
+    nombre: 'Pieza suelta',
+    fila: 'bajo',
+    libre: true,
+    med: {ancho:1000, alto:600, cantidad:1, cantos:2},
+    horas: {taller:1, colocacion:0},
+    calc(m, C){
+      return {
+        piezas: [{
+          nombre:'Pieza', mat:matCuerpo(C), largo:+m.ancho || 0, ancho:+m.alto || 0,
+          cant: Math.max(0, +m.cantidad || 0),
+          cantos: {t:(+m.cantos>=1)?1:0, l:(+m.cantos>=2)?1:0, b:(+m.cantos>=3)?1:0, r:(+m.cantos>=4)?1:0}
+        }],
+        herrajes: {}
+      };
+    }
+  }
+};
+
+const ETIQUETAS = {ancho:'Ancho (mm)', alto:'Alto (mm)', prof:'Prof. (mm)',
+  estantes:'Estantes', cantidad:'Cantidad', cantos:'Lados con canto'};
+
+/* ==================================================================
+   CÁLCULO
+   ================================================================== */
+function calcularMueble(mu){
+  const modelo = MODELOS[mu.tipo];
+  const r = modelo.calc(mu.med, armadoEfectivo(PC()));
+  const cant = Math.max(0, +mu.cant || 0);
+
+  const areaPorMat = {}, piezas = [];
+  let mlCanto = 0;
+
+  for(const p of r.piezas){
+    const largo = Math.max(0, p.largo), ancho = Math.max(0, p.ancho);
+    const unidades = p.cant * cant;
+    if(unidades <= 0 || largo <= 0 || ancho <= 0) continue;
+    piezas.push({...p, largo, ancho, total: unidades});
+    areaPorMat[p.mat] = (areaPorMat[p.mat]||0) + (largo*ancho/1e6)*unidades;
+    const c = p.cantos;
+    mlCanto += ((c.t+c.b)*largo + (c.l+c.r)*ancho)/1000 * unidades;
+  }
+
+  const herrajes = {};
+  for(const k in r.herrajes) herrajes[k] = r.herrajes[k]*cant;
+  if(mlCanto > 0) herrajes.canto = mlCanto;
+
+  const horas = {
+    taller: (modelo.horas.taller||0)*cant,
+    colocacion: (modelo.horas.colocacion||0)*cant
+  };
+  return {piezas, areaPorMat, herrajes, horas, nombre:modelo.nombre};
+}
+
+function calcularTodo(){
+  const area = {}, herrajes = {}, horas = {taller:0, colocacion:0};
+  const piezas = [];
+  const porMueble = [];
+
+  S.muebles.forEach((mu, i) => {
+    const c = calcularMueble(mu);
+    for(const k in c.areaPorMat) area[k] = (area[k]||0) + c.areaPorMat[k];
+    for(const k in c.herrajes)   herrajes[k] = (herrajes[k]||0) + c.herrajes[k];
+    horas.taller     += c.horas.taller;
+    horas.colocacion += c.horas.colocacion;
+    piezas.push({mueble: mu.nombre || c.nombre, idx:i+1, lista:c.piezas});
+    porMueble.push(c);
+  });
+
+  // placas necesarias
+  const desp = 1 + (+PC().coef.desperdicio.v||0)/100;
+  const PLC = placasEfectivas(PC());
+  // si la caja del cajón resulta el mismo material que el cuerpo, se juntan:
+  // se compran de la misma placa, no aparte
+  if(area.interior && mismaPlaca(PLC.interior, PLC.cuerpo)){
+    area.cuerpo = (area.cuerpo || 0) + area.interior;
+    delete area.interior;
+  }
+  const placas = {};
+  let costoPlacas = 0;
+  for(const k in area){
+    const c = comprarMaterial(PLC[k], area[k], desp);
+    placas[k] = {n: c.n, m2: area[k], costo: c.costo, detalle: c.detalle};
+    costoPlacas += c.costo;
+  }
+
+  let costoHerrajes = 0;
+  const detHerrajes = {};
+  for(const k in herrajes){
+    if(k === 'canto'){
+      const c = comprarCanto(PC(), herrajes[k]);
+      detHerrajes[k] = c;
+      costoHerrajes += c.costo;
+      continue;
+    }
+    const H = itemDeCompra(PC(), k);
+    if(!H) continue;
+    detHerrajes[k] = {q: herrajes[k], costo: herrajes[k]*H.precio};
+    costoHerrajes += herrajes[k]*H.precio;
+  }
+
+  const costoMateriales = costoPlacas + costoHerrajes;
+  const ganancia = costoMateriales*(+PC().coef.ganancia.v||0)/100;
+  const materiales = costoMateriales + ganancia;
+  const manoObra = horas.taller*PC().mo.taller.precio + horas.colocacion*PC().mo.colocacion.precio;
+  const neto = materiales + manoObra;
+  const iva = neto*(+PC().coef.iva.v||0)/100;
+
+  return {area, placas, detHerrajes, horas, piezas, porMueble,
+    costoPlacas, costoHerrajes, costoMateriales, ganancia, materiales, manoObra,
+    neto, iva, total: neto+iva};
+}
+
+/* ==================================================================
+   FORMATO
+   ================================================================== */
+const nf = new Intl.NumberFormat('es-UY', {maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('es-UY', {maximumFractionDigits:1});
+const $ = s => document.querySelector(s);
+const money = n => '$ ' + nf.format(Math.round(n||0));
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function cajaCanto(c){
+  const on = 'var(--cinta)', off = 'var(--papel-3)';
+  return `<span class="canto" style="border-top-color:${c.t?on:off};border-bottom-color:${c.b?on:off};border-left-color:${c.l?on:off};border-right-color:${c.r?on:off}"></span>`;
+}
+
+/* ==================================================================
+   RENDER
+   ================================================================== */
+function render(){
+  const T = calcularTodo();
+  renderCatalogo();
+  renderMaterial();
+  renderAvisoDoc();
+  renderMuebles(T);
+  renderResumen(T);
+  renderDespiece(T);
+  renderCompras(T);
+  renderCorte();
+  renderPrecios();
+  renderArchivo();
+  $('#cajaDibujo').innerHTML = dibujoConjunto() ||
+    '<div class="vacio" style="padding:20px"><p class="eyebrow">El dibujo aparece al agregar muebles</p></div>';
+  $('#totalTop').textContent = money(T.total);
+  guardar();
+}
+
+function renderAvisoDoc(){
+  const el = $('#avisoDoc');
+  if(!el) return;
+  if(docPrecios && S.docNumero){
+    el.style.display = 'flex';
+    el.innerHTML = `<div><b>Presupuesto N° ${esc(S.docNumero)} — precios congelados.</b>
+      Lo estás viendo con los precios del día que lo guardaste, así el número no cambia
+      aunque hoy cobres distinto. Para recotizarlo a precios de hoy, usá <em>Duplicar</em>
+      en <em>Mis presupuestos</em>.</div>`;
+  }else{
+    el.style.display = 'none';
+    el.innerHTML = '';
+  }
+}
+
+function renderMaterial(){
+  const cont = $('#selectorMaterial'); if(!cont) return;
+  const ctx = PC();
+  const sel = ctx.materialSel || {fam:'melamina', id:null};
+  const fam = ctx.materiales[sel.fam] || ctx.materiales.melamina;
+  const opciones = fam.opciones || {};
+  const ids = Object.keys(opciones);
+  const idSel = opciones[sel.id] ? sel.id : (ids[0] || '');
+
+  cont.innerHTML = `
+    <div class="campo">
+      <label>Familia</label>
+      <select data-matfam style="width:150px;font-family:var(--sans)">
+        ${Object.entries(ctx.materiales).map(([k,f]) =>
+          `<option value="${k}" ${sel.fam===k?'selected':''}>${esc(f.nombre)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="campo">
+      <label>Decorado / color</label>
+      <select data-matid style="width:220px;font-family:var(--sans)" ${ids.length?'':'disabled'}>
+        ${ids.length ? ids.map(id =>
+            `<option value="${id}" ${idSel===id?'selected':''}>${esc(opciones[id].n)}</option>`).join('')
+          : '<option>— sin opciones cargadas —</option>'}
+      </select>
+    </div>`;
+
+  const dec = opciones[idSel] || DEC_VACIO;
+  const nota = $('#notaMaterial');
+  const maciza = esMaciza(fam);
+
+  if(maciza){
+    /* en madera el espesor lo elige la tabla, no "Cómo armás" */
+    const tablas = dec.pres || [];
+    const usa = tablaElegida(dec, sel.esp);
+    cont.innerHTML += `
+      <div class="campo">
+        <label>Espesor de la tabla</label>
+        <select data-matesp style="width:150px;font-family:var(--sans)" ${tablas.length?'':'disabled'}>
+          ${tablas.length ? tablas.map(p => `<option value="${p.esp}" ${usa && +usa.esp===+p.esp?'selected':''}>${espesorTxt(p.esp)}</option>`).join('')
+            : '<option>— sin espesores —</option>'}
+        </select>
+      </div>`;
+    if(nota){
+      nota.textContent = !usa
+        ? `Cargale espesores a "${dec.n}" en Precios y costos → Materiales.`
+        : (precioDeTabla(usa) > 0
+            ? `El despiece se calcula con ${espesorTxt(usa.esp)} de espesor, y se cobra ${usa.venta === 'tabla' ? 'por tabla' : 'por pie'}.`
+            : `Ojo: "${dec.n}" ${espesorTxt(usa.esp)} no tiene precio ${usa.venta === 'tabla' ? 'por tabla' : 'por pie'} cargado.`);
+    }
+    return;
+  }
+
+  /* la medida de placa solo se pregunta cuando ese color viene en más de una */
+  const esp = (+ctx.armado.espesor === 15) ? 15 : 18;
+  const medidas = presDeEspesor(dec, esp);
+  if(medidas.length > 1){
+    const usa = presElegida(dec, esp, {ancho:sel.ancho, alto:sel.alto});
+    cont.innerHTML += `
+      <div class="campo">
+        <label>Medida de placa</label>
+        <select data-matmedida style="width:170px;font-family:var(--sans)">
+          ${medidas.map(p => `<option value="${p.ancho}x${p.alto}" ${usa && usa.ancho===p.ancho && usa.alto===p.alto?'selected':''}>${medidaTxt(p)}</option>`).join('')}
+        </select>
+      </div>`;
+  }
+
+  if(nota){
+    if(!ids.length){
+      nota.textContent = `Todavía no cargaste opciones en ${fam.nombre}. Cargalas en Precios y costos → Materiales.`;
+    }else{
+      const p = presElegida(dec, esp, {ancho:sel.ancho, alto:sel.alto});
+      nota.textContent = !p
+        ? `Ojo: "${dec.n}" no viene en ${esp} mm. Cambiá el espesor en Precios y costos → Cómo armás, o elegí otro color.`
+        : (+p.precio > 0 ? '' : `Ojo: "${dec.n}" de ${esp} mm no tiene precio cargado. Ponelo en Precios y costos.`);
+    }
+  }
+}
+
+const precioDeTabla = p => +(p.venta === 'tabla' ? p.preciotabla : p.preciopie) || 0;
+
+/* 1830×2600 se lee como "2,60 × 1,83 m", que es como lo pide el carpintero */
+const medidaTxt = p => {
+  const m = v => (v/1000).toFixed(2).replace('.', ',');
+  return `${m(p.alto)} × ${m(p.ancho)} m`;
+};
+
+/* ==================================================================
+   OPTIMIZADOR DE CORTE  (guillotina — tiras de lado a lado)
+   Acomoda las piezas como las corta una escuadradora: primero tiras a
+   lo largo de la placa, después cortes cruzados dentro de cada tira.
+   No busca el óptimo perfecto (es un problema muy duro), pero da un
+   número de placas realista y un mapa para el taller. Es un cálculo
+   APARTE: no toca el precio del presupuesto, que sigue por m².
+   ================================================================== */
+function optimizarCorte(piezas, plW, plH, kerf, permiteGirar){
+  // plW × plH: la placa (largo × ancho). Las tiras corren a lo largo (plW).
+  const entra = [], grandes = [];
+  for(const p of piezas){
+    const L = +p.largo, A = +p.ancho;
+    let best = null;
+    const orient = permiteGirar ? [[L,A],[A,L]] : [[L,A]];
+    for(const [w,h] of orient)
+      if(w <= plW && h <= plH && (!best || h < best.h)) best = {w, h};  // tira más baja = mejor
+    if(best) entra.push({nombre:p.nombre, w:best.w, h:best.h});
+    else grandes.push(p);                                              // no entra en la placa
+  }
+  entra.sort((a,b) => b.h - a.h || b.w - a.w);   // las más altas primero: menos huecos
+
+  const placas = [];
+  for(const it of entra){
+    let puesto = false;
+    for(const pl of placas){
+      for(const t of pl.tiras){                  // 1) ¿cabe en una tira ya abierta?
+        const gap = t.piezas.length ? kerf : 0;
+        if(it.h <= t.alto && t.xTope + gap + it.w <= plW){
+          const x = t.xTope + gap;
+          t.piezas.push({nombre:it.nombre, x, y:t.y, w:it.w, h:it.h});
+          t.xTope = x + it.w; puesto = true; break;
+        }
+      }
+      if(puesto) break;
+      const gap = pl.tiras.length ? kerf : 0;    // 2) tira nueva en esta placa
+      if(pl.yTope + gap + it.h <= plH){
+        const y = pl.yTope + gap;
+        pl.tiras.push({y, alto:it.h, xTope:it.w, piezas:[{nombre:it.nombre, x:0, y, w:it.w, h:it.h}]});
+        pl.yTope = y + it.h; puesto = true; break;
+      }
+    }
+    if(!puesto){                                 // 3) placa nueva
+      const pl = {tiras:[{y:0, alto:it.h, xTope:it.w, piezas:[{nombre:it.nombre, x:0, y:0, w:it.w, h:it.h}]}], yTope:it.h};
+      placas.push(pl);
+    }
+  }
+  const areaPlaca = plW * plH;
+  let areaUsada = 0;
+  for(const pl of placas) for(const t of pl.tiras) for(const pz of t.piezas) areaUsada += pz.w*pz.h;
+  const n = placas.length;
+  return {placas, n, plW, plH, desperdicio: n ? 1 - areaUsada/(n*areaPlaca) : 0, grandes};
+}
+
+/* junta las piezas del despiece por material y corre el optimizador en cada uno */
+function piezasParaCorte(T){
+  const PLC = placasEfectivas(PC());
+  const porRol = {};
+  for(const g of T.piezas) for(const p of g.lista) (porRol[p.mat] = porRol[p.mat] || []).push(p);
+  // caja de cajón del mismo material que el cuerpo: se cortan de la misma placa
+  if(porRol.interior && mismaPlaca(PLC.interior, PLC.cuerpo)){
+    porRol.cuerpo = (porRol.cuerpo || []).concat(porRol.interior);
+    delete porRol.interior;
+  }
+  const kerf = +PC().armado.corte || 0;
+  const res = [];
+  for(const rol in porRol){
+    const placa = PLC[rol];
+    if(!placa || placa.unidad !== 'placa'){ res.push({rol, placa, noPlaca:true}); continue; }
+    const piezas = [];
+    for(const p of porRol[rol]) for(let i=0;i<p.total;i++) piezas.push({nombre:p.nombre, largo:p.largo, ancho:p.ancho});
+    const opt = optimizarCorte(piezas, placa.altoP, placa.anchoP, kerf, !placa.veta);
+    res.push({rol, placa, opt, cuenta:piezas.length});
+  }
+  return res;
+}
+
+/* una placa dibujada, con sus piezas ubicadas (viewBox en mm) */
+function dibujoPlaca(pl, plW, plH, idx){
+  const m = 40;
+  let rects = '';
+  for(const t of pl.tiras) for(const pz of t.piezas){
+    rects += `<rect x="${f1(pz.x)}" y="${f1(pz.y)}" width="${f1(pz.w)}" height="${f1(pz.h)}" class="corte-pz"/>`;
+    if(pz.w > 260 && pz.h > 150)
+      rects += `<text x="${f1(pz.x+pz.w/2)}" y="${f1(pz.y+pz.h/2)}" class="corte-txt">${Math.round(pz.w)}×${Math.round(pz.h)}</text>`;
+  }
+  return `<svg viewBox="${-m} ${-m} ${plW+2*m} ${plH+2.4*m}" class="corte-svg" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="${plW}" height="${plH}" class="corte-placa"/>
+    ${rects}
+    <text x="${plW/2}" y="${plH+m*1.5}" class="corte-cap">Placa ${idx} · ${(plW/1000).toFixed(2)}×${(plH/1000).toFixed(2)} m</text>
+  </svg>`;
+}
+const f1 = v => (+v).toFixed(1);
+
+function renderCorte(){
+  const caja = $('#cajaCorte'); if(!caja) return;
+  const k = $('#corteKerf'); if(k && document.activeElement !== k) k.value = PC().armado.corte;
+  if(!S.muebles.length){
+    caja.innerHTML = '<div class="vacio" style="padding:22px"><p>El mapa de corte aparece al agregar muebles.</p></div>';
+    return;
+  }
+  const T = calcularTodo();
+  let html = '';
+  for(const r of piezasParaCorte(T)){
+    const nombre = esc(r.placa ? r.placa.n : r.rol);
+    if(r.noPlaca){
+      html += `<div class="corte-rol"><h3>${nombre}</h3>
+        <div class="corte-resumen">Se corta de tabla o por pie, no de placa — no entra en este mapa.</div></div>`;
+      continue;
+    }
+    const o = r.opt, est = T.placas[r.rol];
+    html += `<div class="corte-rol">
+      <h3>${nombre}</h3>
+      <div class="corte-resumen">
+        <b>${o.n} placa${o.n===1?'':'s'}</b> por corte real · desperdicio ${nf.format(Math.round(o.desperdicio*100))}% · ${r.cuenta} piezas
+        ${est ? ` · <span class="corte-vs">la estimación por m² daba ${esc(est.detalle)}</span>` : ''}
+        ${o.grandes.length ? `<div class="corte-grande"><b>⚠ ${o.grandes.length} pieza${o.grandes.length===1?'':'s'} no entra${o.grandes.length===1?'':'n'} en la placa</b> (van en varios paños o a medida): ${
+          o.grandes.map(g => esc(g.nombre)+' '+Math.round(g.largo)+'×'+Math.round(g.ancho)).join('  ·  ')}</div>` : ''}
+      </div>
+      ${o.placas.length ? `<div class="corte-placas">${o.placas.map((pl,i) => dibujoPlaca(pl, o.plW, o.plH, i+1)).join('')}</div>` : ''}
+    </div>`;
+  }
+  caja.innerHTML = html;
+}
+
+/* ==================================================================
+   IMPORTAR PLANILLA  (opcional — el alta a mano sigue igual)
+   La planilla la lee el CÓDIGO, no un modelo: los números entran tal
+   cual, sin que nadie los "adivine". Se aceptan datos pegados de Excel
+   o Google Sheets (separados por tabulación) y archivos .csv.
+   ================================================================== */
+let importFilas = null;   // filas leídas, esperando confirmación
+let importAviso = '';     // mensaje de error de lectura (planilla vacía, etc.)
+
+/* sinónimos con los que la gente nombra cada mueble en su planilla */
+const SINONIMOS_TIPO = {
+  bajo:       ['bajo mesada','bajomesada','bajo','modulo bajo'],
+  alacena:    ['alacena','aereo','aereos','superior','colgante'],
+  cajonera:   ['cajonera','cajones','cajon'],
+  estanteria: ['estanteria','estante','estantes','biblioteca','repisa','modulero'],
+  placard:    ['placard','ropero','guardarropa','closet'],
+  libre:      ['pieza','suelta','libre','otro','varios','placa']
+};
+
+const normTxt = s => String(s == null ? '' : s).toLowerCase()
+  .normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+/* reconoce el tipo de mueble a partir de lo que diga la celda */
+function tipoDesde(valor){
+  const v = normTxt(valor);
+  if(!v) return null;
+  for(const [k, lista] of Object.entries(SINONIMOS_TIPO))
+    if(lista.some(s => v.includes(s))) return k;
+  return null;
+}
+
+/* Lee el texto de la planilla y devuelve filas listas para revisar.
+   Detecta el separador (tab, ; o ,) y si la coma es decimal (formato
+   uruguayo: 1.234,5). Cada fila trae su estado: ok / aviso / error. */
+function leerPlanilla(texto){
+  const lineas = String(texto).replace(/\r/g, '').split('\n').filter(l => l.trim());
+  if(lineas.length < 2) return {error:'Pegá al menos el encabezado y una fila de muebles.'};
+
+  const prim = lineas[0];
+  const delim = prim.includes('\t') ? '\t' : (prim.includes(';') ? ';' : ',');
+  const comaDecimal = delim !== ',';            // si separa con ; o tab, la coma es decimal
+  const celdas = l => l.split(delim).map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+  const numero = v => {
+    let s = String(v).replace(/[^\d.,-]/g, '');
+    if(!s) return null;
+    s = comaDecimal ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  };
+
+  const enc = celdas(lineas[0]).map(normTxt);
+  const col = (...alias) => enc.findIndex(h => alias.some(a => h === a || h.startsWith(a)));
+  const iTipo   = col('tipo','mueble','modelo','descripcion','detalle','item');
+  const iNombre = col('nombre','descripcion','detalle','obra','ambiente');
+  const iCant   = col('cantidad','cant','unidades','uds','q');
+  const iAncho  = col('ancho','an');
+  const iAlto   = col('alto','altura');
+  const iProf   = col('profundidad','prof','fondo');
+  const iEst    = col('estantes','estante');
+
+  if(iAncho < 0 && iAlto < 0)
+    return {error:'No encontré columnas de medidas. La planilla necesita al menos "Ancho" y "Alto".'};
+
+  const filas = [];
+  for(let r = 1; r < lineas.length; r++){
+    const c = celdas(lineas[r]);
+    const val = i => i >= 0 ? c[i] : undefined;
+
+    let tipo = tipoDesde(val(iTipo)) || tipoDesde(val(iNombre));
+    const notas = [];
+    if(!tipo){ tipo = 'libre'; notas.push('no reconocí el tipo, va como pieza suelta'); }
+
+    const med = {...MODELOS[tipo].med};
+    const a = numero(val(iAncho)), al = numero(val(iAlto)), p = numero(val(iProf)), e = numero(val(iEst));
+    // solo pisa el valor por defecto del modelo si la planilla trajo un número real
+    const dioAncho = 'ancho' in med && a  > 0, dioAlto = 'alto' in med && al > 0;
+    if(dioAncho) med.ancho = a;
+    if(dioAlto)  med.alto  = al;
+    if('prof' in med && p > 0) med.prof = p;
+    if('estantes' in med && e != null) med.estantes = e;
+
+    const cant = Math.max(1, Math.round(numero(val(iCant)) || 1));
+    const nombre = iNombre >= 0 ? (c[iNombre] || '').trim() : '';
+
+    // la fila sirve solo si la planilla trajo al menos una medida de verdad;
+    // que el modelo tenga medidas por defecto no la salva
+    if(!dioAncho && !dioAlto){
+      notas.push('sin medidas, no la puedo cargar');
+      filas.push({tipo, nombre, cant, med, estado:'error', nota: notas.join(' · ')});
+      continue;
+    }
+    if('ancho' in med && !dioAncho) notas.push('sin ancho, uso el estándar');
+    if('alto'  in med && !dioAlto)  notas.push('sin alto, uso el estándar');
+    const estado = notas.length ? 'aviso' : 'ok';
+
+    filas.push({tipo, nombre, cant, med, estado, nota: notas.join(' · ')});
+  }
+  return {filas};
+}
+
+function abrirImportar(){
+  const caja = $('#cajaImportar'); if(!caja) return;
+  const abierto = !caja.classList.contains('oculto');
+  caja.classList.toggle('oculto', abierto);   // segundo clic lo cierra
+  if(abierto){ importFilas = null; importAviso = ''; return; }
+  importFilas = null; importAviso = '';
+  renderImportar();
+  const ta = caja.querySelector('#impTexto');
+  if(ta) ta.focus();
+}
+
+/* lee un .csv del disco y lo trata igual que si lo hubieras pegado */
+function leerArchivoPlanilla(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const ta = $('#impTexto'); if(ta) ta.value = reader.result;
+    const r = leerPlanilla(reader.result);
+    importAviso = r.error || '';
+    importFilas = r.filas || null;
+    renderImportar();
+  };
+  reader.onerror = () => { importAviso = 'No pude leer ese archivo.'; renderImportar(); };
+  reader.readAsText(file);
+}
+
+function renderImportar(){
+  const caja = $('#cajaImportar'); if(!caja) return;
+  let html = `<div class="importar">
+    <h3>Importar planilla</h3>
+    <div class="paso">
+      En tu Excel o Google Sheets seleccioná los muebles con sus medidas (con el encabezado:
+      <b>Mueble, Cantidad, Ancho, Alto, Profundidad</b>), copialos y pegalos acá abajo.
+      O subí el archivo <b>.csv</b>. Nada de esto sale de tu compu.
+    </div>
+    <textarea id="impTexto" placeholder="Mueble	Cant	Ancho	Alto	Prof
+Bajo mesada	2	800	850	580
+Alacena	2	800	700	330"></textarea>
+    <div class="acciones">
+      <button class="btn" id="impLeer">Leer planilla</button>
+      <button class="btn sec" id="impArchivoBtn">Subir .csv</button>
+      <input type="file" id="impArchivo" accept=".csv,text/csv,text/plain" class="oculto">
+      <button class="btn sec" id="impCerrar" style="margin-left:auto">Cerrar</button>
+    </div>`;
+
+  if(importAviso){
+    html += `<div class="aviso" style="margin:12px 0 0">${esc(importAviso)}</div>`;
+  }
+
+  if(importFilas && importFilas.length){
+    const buenas = importFilas.filter(f => f.estado !== 'error').length;
+    html += `<table class="imp-tabla"><thead><tr>
+        <th>Mueble</th><th class="num">Cant</th><th class="num">Ancho</th>
+        <th class="num">Alto</th><th class="num">Prof</th><th></th></tr></thead><tbody>`;
+    for(const f of importFilas){
+      const m = f.med;
+      html += `<tr class="${f.estado==='ok'?'':('imp-'+f.estado)}">
+        <td>${esc(MODELOS[f.tipo].nombre)}${f.nombre?` · ${esc(f.nombre)}`:''}</td>
+        <td class="num">${f.cant}</td>
+        <td class="num">${'ancho' in m ? nf.format(m.ancho||0) : '—'}</td>
+        <td class="num">${'alto'  in m ? nf.format(m.alto||0)  : '—'}</td>
+        <td class="num">${'prof'  in m ? nf.format(m.prof||0)  : '—'}</td>
+        <td class="imp-estado ${f.estado}">${f.estado==='ok'?'ok':esc(f.nota)}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>
+      <div class="acciones">
+        <button class="btn" id="impAgregar" ${buenas?'':'disabled'}>Agregar ${buenas} mueble${buenas===1?'':'s'} al presupuesto</button>
+        <span class="eyebrow" style="color:var(--tinta-2)">revisá las medidas antes de agregar</span>
+      </div>`;
+  }
+
+  html += `</div>`;
+  caja.innerHTML = html;
+}
+
+function renderCatalogo(){
+  const base = Object.entries(MODELOS)
+    .map(([k,m]) => `<button class="chip" data-add="${k}"><span class="mas">+</span>${esc(m.nombre)}</button>`)
+    .join('');
+  const mios = (S.modelosGuardados || []).map(md =>
+    `<span class="chip chip-modelo" data-addmodelo="${md.id}" title="Agregar y cambiar las medidas">` +
+      `<span class="mas">+</span>${esc(md.nombre)}` +
+      `<button class="chip-x" data-delmodelo="${md.id}" title="Quitar de mis modelos">×</button>` +
+    `</span>`).join('');
+  const seccionMios = mios ? `<span class="catalogo-sep">Mis modelos</span>${mios}` : '';
+  $('#catalogo').innerHTML = base + seccionMios;
+}
+
+function renderMuebles(T){
+  const cont = $('#listaMuebles');
+  $('#vacioMuebles').style.display = S.muebles.length ? 'none' : 'block';
+  $('#contadorMuebles').textContent = S.muebles.length
+    ? S.muebles.reduce((a,m)=>a+(+m.cant||0),0) + ' unidades' : '';
+
+  cont.innerHTML = S.muebles.map((mu,i) => {
+    const modelo = MODELOS[mu.tipo];
+    const c = T.porMueble[i];
+    const medTxt = Object.entries(mu.med)
+      .filter(([k]) => ['ancho','alto','prof'].includes(k))
+      .map(([,v]) => v).join(' × ') + ' mm';
+    const costo = costoDeUno(c);
+
+    const campos = Object.entries(mu.med).map(([k,v]) => `
+      <div class="campo">
+        <label>${ETIQUETAS[k]||k}</label>
+        <input type="number" min="0" step="1" value="${v}" data-med="${i}:${k}">
+      </div>`).join('');
+
+    return `
+    <div class="mueble ${mu.abierto?'abierto':''}">
+      <div class="mueble-cab" data-toggle="${i}">
+        <span class="idx">${String(i+1).padStart(2,'0')}</span>
+        <span class="mueble-nom">${esc(mu.nombre || modelo.nombre)}</span>
+        <span class="mueble-med">${mu.cant} × ${medTxt}</span>
+        <span class="mueble-sub">${money(costo)}</span>
+        <button class="borrar" data-del="${i}" title="Quitar">×</button>
+      </div>
+      <div class="mueble-det">
+        <div class="campos">
+          <div class="campo ancho">
+            <label>Nombre</label>
+            <input type="text" value="${esc(mu.nombre||'')}" placeholder="${esc(modelo.nombre)}" data-nom="${i}">
+          </div>
+          <div class="campo">
+            <label>Cantidad</label>
+            <input type="number" min="0" step="1" value="${mu.cant}" data-cant="${i}">
+          </div>
+          <div class="campo">
+            <label>Dónde va</label>
+            <select data-fila="${i}" style="width:150px;font-family:var(--sans)">
+              ${Object.entries(FILAS).map(([k,t]) =>
+                `<option value="${k}" ${filaDe(mu)===k?'selected':''}>${esc(t)}</option>`).join('')}
+            </select>
+          </div>
+          ${campos}
+        </div>
+        <div class="mueble-acciones">
+          <button class="btn sec" data-savemodelo="${i}"
+            title="Guardar este mueble en tu base para reusarlo con otro cliente">Guardar como modelo</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function costoDeUno(c){
+  // costo directo prorrateado de un mueble (sin coeficientes)
+  const PLC = placasEfectivas(PC());
+  let m = 0;
+  for(const k in c.areaPorMat){
+    m += c.areaPorMat[k] * (1+(+PC().coef.desperdicio.v||0)/100) * precioPorM2(PLC[k]);
+  }
+  for(const k in c.herrajes){
+    if(k === 'canto'){ m += c.herrajes[k] * precioPorMetroCanto(cantoActivo(PC())); continue; }
+    const H = itemDeCompra(PC(), k);
+    if(H) m += c.herrajes[k]*H.precio;
+  }
+  m *= 1 + (+PC().coef.ganancia.v||0)/100;
+  m += c.horas.taller*PC().mo.taller.precio + c.horas.colocacion*PC().mo.colocacion.precio;
+  return m;
+}
+
+function renderResumen(T){
+  const PLC = placasEfectivas(PC());
+  const placas = Object.entries(T.placas)
+    .map(([k,v]) => `<div class="linea-r mini"><span>${esc(PLC[k].n)} — ${v.detalle} (${nf1.format(v.m2)} m²)</span><span>${money(v.costo)}</span></div>`)
+    .join('');
+
+  $('#resumenLineas').innerHTML = `
+    <div class="linea-r"><span>Placas</span><span>${money(T.costoPlacas)}</span></div>
+    ${placas}
+    <div class="linea-r"><span>Canto y herrajes</span><span>${money(T.costoHerrajes)}</span></div>
+    <div class="linea-r sub"><span>Materiales a costo</span><span>${money(T.costoMateriales)}</span></div>
+    <div class="linea-r"><span>Ganancia sobre materiales ${PC().coef.ganancia.v}%</span><span>${money(T.ganancia)}</span></div>
+    <div class="linea-r"><span>Mano de obra</span><span>${money(T.manoObra)}</span></div>
+    <div class="linea-r mini"><span>${nf1.format(T.horas.taller)} h taller · ${nf1.format(T.horas.colocacion)} h colocación</span><span></span></div>
+    <div class="linea-r sub"><span>Neto</span><span>${money(T.neto)}</span></div>
+    <div class="linea-r"><span>IVA ${PC().coef.iva.v}%</span><span>${money(T.iva)}</span></div>`;
+
+  $('#totalFinal').textContent = money(T.total);
+  $('#totalSinIva').textContent = S.muebles.length
+    ? 'Neto sin IVA ' + money(T.neto) : '';
+}
+
+function renderDespiece(T){
+  const hayPiezas = T.piezas.some(g => g.lista.length);
+  $('#vacioDespiece').style.display = hayPiezas ? 'none' : 'block';
+  if(!hayPiezas){ $('#tablaDespiece').innerHTML = ''; return; }
+
+  let html = `<thead><tr>
+    <th>Pieza</th><th>Material</th><th class="num">Largo</th><th class="num">Ancho</th>
+    <th class="num">Cant.</th><th>Canto</th></tr></thead><tbody>`;
+
+  const PLC = placasEfectivas(PC());
+  for(const g of T.piezas){
+    if(!g.lista.length) continue;
+    html += `<tr class="grupo"><td colspan="6">${String(g.idx).padStart(2,'0')} · ${esc(g.mueble)}</td></tr>`;
+    for(const p of g.lista){
+      html += `<tr>
+        <td>${esc(p.nombre)}</td>
+        <td style="color:var(--tinta-2)">${esc(PLC[p.mat].n)}</td>
+        <td class="num">${nf.format(Math.round(p.largo))}</td>
+        <td class="num">${nf.format(Math.round(p.ancho))}</td>
+        <td class="num">${p.total}</td>
+        <td>${cajaCanto(p.cantos)}</td>
+      </tr>`;
+    }
+  }
+  $('#tablaDespiece').innerHTML = html + '</tbody>';
+}
+
+function renderCompras(T){
+  let html = `<thead><tr><th>Ítem</th><th class="num">Cant.</th><th class="num">Costo</th></tr></thead><tbody>`;
+  const PLC = placasEfectivas(PC());
+  for(const k in T.placas){
+    html += `<tr><td>${esc(PLC[k].n)}</td><td class="num">${esc(T.placas[k].detalle)}</td><td class="num">${money(T.placas[k].costo)}</td></tr>`;
+  }
+  for(const k in T.detHerrajes){
+    const H = itemDeCompra(PC(), k), d = T.detHerrajes[k];
+    if(!H) continue;
+    const cant = d.detalle || `${nf1.format(d.q)} ${esc(H.u)}`;
+    html += `<tr><td>${esc(H.n)}</td><td class="num">${cant}</td><td class="num">${money(d.costo)}</td></tr>`;
+  }
+  if(!Object.keys(T.placas).length && !Object.keys(T.detHerrajes).length){
+    html += `<tr><td colspan="3" style="color:var(--tinta-2);padding:18px;text-align:center">Sin materiales todavía.</td></tr>`;
+  }
+  $('#tablaCompras').innerHTML = html + '</tbody>';
+}
+
+/* Qué está abierto en la pantalla de precios. No se guarda: es cómo estás
+   mirando la lista ahora, no un dato del taller. */
+let filtroMat = '';
+let famAbierta = {};              // 'melamina' -> true
+let decAbierto = {};              // 'melamina:blanco' -> true
+let grupoAbierto = {};            // 'melamina:robles' -> true
+let espesorMat = 18;              // espesor con el que mirás la melamina ('todos' = sin filtrar)
+
+/* cada familia tiene sus propios grupos: colores en melamina, especies en madera */
+const gruposDe = fam => esMaciza(fam) ? GRUPOS_MAD : GRUPOS_MEL;
+
+/* los espesores que existen en esa familia, de mayor a menor */
+const espesoresDeFamilia = fam =>
+  [...new Set(Object.values(fam.opciones || {}).flatMap(d => (d.pres||[]).map(p => +p.esp)))]
+    .sort((a,b) => b - a);
+
+/* resumen de un material para la fila cerrada: qué espesores tiene y si ya
+   le cargaste precio */
+function resumenDec(d, maciza, espFoco){
+  const pres = d.pres || [];
+  if(!pres.length) return {medidas:'sin medidas', falta:true};
+  // un mismo espesor puede venir en dos medidas de placa: en el resumen va una sola vez
+  const esps = [...new Set(pres.map(p => +p.esp))].sort((a,b) => a - b);
+  const medidas = maciza
+    ? esps.map(e => espesorTxt(e)).join(' · ')
+    : esps.map(e => String(e).replace('.', ',')).join(' · ') + ' mm';
+  // si estás mirando un espesor puntual, el aviso habla de ese y no del color entero
+  const mira = espFoco ? pres.filter(p => +p.esp === +espFoco) : pres;
+  const conPrecio = mira.filter(p => maciza ? precioDeTabla(p) > 0 : +p.precio > 0).length;
+  return {medidas, conPrecio, falta: conPrecio === 0};
+}
+
+function renderMateriales(){
+  const cont = $('#cajaMateriales'); if(!cont) return;
+  const encab = t => `<div style="padding:8px 14px;background:var(--papel-2);font-family:var(--mono);
+    font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tinta-2);
+    border-bottom:1px solid var(--linea)">${esc(t)}</div>`;
+  let html = '';
+
+  const buscado = filtroMat.trim().toLowerCase();
+  html += `<div style="padding:10px 14px;border-bottom:1px solid var(--linea);display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+    <span class="eyebrow">Buscar color</span>
+    <input type="text" data-filtromat value="${esc(filtroMat)}" placeholder="roble, gris, blanco…"
+      style="flex:1;min-width:150px;max-width:260px;text-align:left;padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans)">
+    ${buscado ? `<button class="btn sec" data-filtroclear style="padding:5px 10px;font-size:11px">Ver todos</button>` : ''}
+  </div>`;
+
+  for(const [fk, fam] of Object.entries(S.materiales)){
+    const todos = Object.keys(fam.opciones || {});
+    const maciza = esMaciza(fam);
+    // la melamina se mira de a un espesor por vez; la madera no se divide así
+    const porEspesor = !maciza && espesorMat !== 'todos';
+    let ids = todos;
+    if(porEspesor) ids = ids.filter(id => presDeEspesor(fam.opciones[id], espesorMat).length);
+    if(buscado)    ids = ids.filter(id => fam.opciones[id].n.toLowerCase().includes(buscado));
+    // buscando, la familia se abre sola para que veas lo que encontró
+    const abierta = buscado ? ids.length > 0 : !!famAbierta[fk];
+    const cuenta = (buscado || porEspesor) ? `${ids.length} de ${todos.length}` : `${todos.length}`;
+
+    html += `<button class="fam-cab" data-famtoggle="${fk}">
+      <span class="flecha">${abierta ? '▾' : '▸'}</span>${esc(fam.nombre)}
+      <span style="margin-left:auto;font-family:var(--mono)">${cuenta}</span></button>`;
+    if(!abierta) continue;
+
+    if(!maciza){
+      const esps = espesoresDeFamilia(fam);
+      const chip = (v, t) => `<button class="chip-esp ${String(espesorMat)===String(v)?'sel':''}"
+        data-esptoggle="${v}">${t}</button>`;
+      html += `<div class="esp-barra">
+        <span class="eyebrow">Espesor</span>
+        ${esps.map(e => chip(e, String(e).replace('.', ',') + ' mm')).join('')}
+        ${chip('todos', 'Todos')}
+      </div>`;
+    }
+
+    if(!ids.length){
+      const enEsp = porEspesor ? ` en ${String(espesorMat).replace('.', ',')} mm` : '';
+      html += `<div style="padding:12px 14px;color:var(--tinta-2);border-bottom:1px solid var(--papel-2)">${
+        buscado ? `Ningún color con ese nombre${enEsp}.`
+        : porEspesor ? `Ningún color cargado en ${String(espesorMat).replace('.', ',')} mm.`
+        : 'Sin opciones todavía. Agregá una abajo.'}</div>`;
+    }
+
+    /* Con muchos colores se juntan por grupo (Blancos, Robles...). Con pocos
+       no vale la pena: se listan derecho y te ahorrás un toque. Buscando
+       tampoco se agrupa, porque ya estás yendo a uno puntual. */
+    const agrupar = !buscado && ids.length > 10;
+    if(agrupar){
+      const GR = gruposDe(fam);
+      const porGrupo = {};
+      for(const id of ids){
+        const g = GR[fam.opciones[id].g] ? fam.opciones[id].g : 'otros';
+        (porGrupo[g] = porGrupo[g] || []).push(id);
+      }
+      for(const g of Object.keys(GR)){
+        const lista = porGrupo[g];
+        if(!lista) continue;
+        const clave = fk + ':' + g;
+        const abiertoG = !!grupoAbierto[clave];
+        const sinPrecio = lista.filter(id =>
+          resumenDec(fam.opciones[id], maciza, porEspesor ? espesorMat : null).falta).length;
+        html += `<button class="grupo-cab ${abiertoG?'abierta':''}" data-grupotoggle="${clave}">
+          <span class="flecha">${abiertoG ? '▾' : '▸'}</span>${esc(GR[g])}
+          <span class="datos">${lista.length}${
+            sinPrecio ? ` · <span class="pendiente">${sinPrecio} sin precio</span>` : ''}</span></button>`;
+        if(abiertoG) html += filasDeColores(lista, fk, fam, maciza, porEspesor);
+      }
+    }else{
+      html += filasDeColores(ids, fk, fam, maciza, porEspesor);
+    }
+
+    html += `<div style="padding:9px 14px;border-bottom:1px solid var(--linea)">
+      <button class="btn sec" data-decadd="${fk}" style="padding:5px 10px;font-size:11px">+ Agregar a ${esc(fam.nombre)}</button>
+    </div>`;
+  }
+
+  const f = S.placas.fondo;
+  html += encab('Fondo') +
+    `<table class="preciotabla"><thead><tr><th>Material</th>
+      <th class="num">Ancho placa</th><th class="num">Alto placa</th><th class="num">Precio</th></tr></thead><tbody>
+      <tr><td style="color:var(--tinta-2)">${esc(f.n)}</td>
+        <td class="num"><input type="number" min="1" value="${f.anchoP}" data-placa="fondo:anchoP"></td>
+        <td class="num"><input type="number" min="1" value="${f.altoP}" data-placa="fondo:altoP"></td>
+        <td class="num"><input type="number" min="0" value="${f.precio}" data-placa="fondo:precio"></td></tr>
+    </tbody></table>`;
+
+  /* el interior de cajón va en 15 mm, así que solo se ofrecen los colores
+     que la barraca traiga en ese espesor */
+  const mel = S.materiales.melamina || {opciones:{}};
+  const idsMel = Object.keys(mel.opciones).filter(id => presDeEspesor(mel.opciones[id], ESPESOR_CAJON).length);
+  const emm = String(ESPESOR_CAJON).replace('.', ',');
+  html += `<div style="padding:11px 14px;border-top:1px solid var(--linea);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span class="eyebrow">Caja del cajón (${emm} mm)</span>
+    <select data-interior style="max-width:230px;padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans)">
+      <option value="__cuerpo__" ${S.interiorId==='__cuerpo__'?'selected':''}>Mismo que el mueble</option>
+      ${idsMel.map(id => `<option value="${id}" ${S.interiorId===id?'selected':''}>${esc(mel.opciones[id].n)}</option>`).join('')}
+    </select>
+  </div>`;
+
+  cont.innerHTML = html;
+}
+
+/* Un renglón por color: cerrado muestra el resumen; abierto, la tabla para
+   editar sus medidas y precios. */
+function filasDeColores(ids, fk, fam, maciza, porEspesor){
+  let html = '';
+  for(const id of ids){
+    const d = fam.opciones[id];
+    const pres = d.pres || [];
+    const res = resumenDec(d, maciza, porEspesor ? espesorMat : null);
+    const abierto = !!decAbierto[fk + ':' + id];
+
+    html += `<button class="dec-cab ${abierto?'abierta':''}" data-dectoggle="${fk}:${id}">
+      <span class="flecha">${abierto ? '▾' : '▸'}</span>${esc(d.n)}
+      <span class="datos">${esc(res.medidas)}${
+        res.falta ? ' · <span class="pendiente">sin precio</span>' : ''}</span></button>`;
+    if(!abierto) continue;
+
+    html += `<div class="dec-panel">
+      <table class="preciotabla"><thead><tr>` +
+      (maciza
+        ? `<th class="num">Espesor</th><th class="num">Largo tabla</th><th class="num">Ancho tabla</th>
+           <th class="num">$ el pie</th><th class="num">$ la tabla</th><th>Cobra por</th><th></th>`
+        : `<th class="num">Espesor</th><th class="num">Ancho placa</th><th class="num">Alto placa</th>
+           <th class="num">Precio</th><th></th>`) +
+      `</tr></thead><tbody>`;
+
+    if(!pres.length){
+      html += `<tr><td colspan="${maciza?7:5}" style="color:var(--tinta-2)">Sin ${
+        maciza?'espesores':'medidas'}. Agregá con el botón de abajo.</td></tr>`;
+    }
+    pres.forEach((p, i) => {
+      const cel = maciza
+        ? `<td class="num" title="${esc(espesorTxt(p.esp))}"><input type="number" min="0" step="0.1" value="${p.esp}" data-pres="${fk}:${id}:${i}:esp"></td>
+           <td class="num"><input type="number" min="1" value="${p.largo}" data-pres="${fk}:${id}:${i}:largo"></td>
+           <td class="num"><input type="number" min="1" value="${p.ancho}" data-pres="${fk}:${id}:${i}:ancho"></td>
+           <td class="num"><input type="number" min="0" value="${p.preciopie}" data-pres="${fk}:${id}:${i}:preciopie"></td>
+           <td class="num"><input type="number" min="0" value="${p.preciotabla}" data-pres="${fk}:${id}:${i}:preciotabla"></td>
+           <td><select data-venta="${fk}:${id}:${i}" style="padding:4px 6px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans);font-size:11.5px">
+                 <option value="pie" ${p.venta!=='tabla'?'selected':''}>pie</option>
+                 <option value="tabla" ${p.venta==='tabla'?'selected':''}>tabla</option>
+               </select></td>`
+        : `<td class="num"><input type="number" min="0" step="0.5" value="${p.esp}" data-pres="${fk}:${id}:${i}:esp"></td>
+           <td class="num"><input type="number" min="1" value="${p.ancho}" data-pres="${fk}:${id}:${i}:ancho"></td>
+           <td class="num"><input type="number" min="1" value="${p.alto}" data-pres="${fk}:${id}:${i}:alto"></td>
+           <td class="num"><input type="number" min="0" value="${p.precio}" data-pres="${fk}:${id}:${i}:precio"></td>`;
+      // la fila del espesor que estás mirando va marcada, para no equivocarte de renglón
+      const foco = porEspesor && +p.esp === +espesorMat ? ' class="foco"' : '';
+      html += `<tr${foco}>${cel}
+        <td style="text-align:right"><button class="borrar" data-presdel="${fk}:${id}:${i}" title="Quitar esta medida">×</button></td>
+      </tr>`;
+    });
+
+    const GR = gruposDe(fam);
+    const grupoSel = `
+      <span class="eyebrow">Grupo</span>
+      <select data-decgrupo="${fk}:${id}" style="padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:#fff;font-family:var(--sans);font-size:12px">
+        ${Object.entries(GR).map(([g,t]) =>
+          `<option value="${g}" ${(GR[d.g]?d.g:'otros')===g?'selected':''}>${esc(t)}</option>`).join('')}
+      </select>`;
+    // la veta manda en cómo se cortan las piezas: con veta no se pueden girar
+    const vetaChk = maciza ? '' : `
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--tinta-2);cursor:pointer"
+        title="Si tiene veta, al cortar las piezas no se pueden girar (respetan la dirección)">
+        <input type="checkbox" data-decveta="${fk}:${id}" ${d.veta?'checked':''}> Tiene veta
+      </label>`;
+
+    html += `</tbody></table>
+      <div class="acciones">
+        <span class="eyebrow">Nombre</span>
+        <input type="text" value="${esc(d.n)}" data-dec="${fk}:${id}:n"
+          style="flex:1;min-width:140px;max-width:230px;text-align:left;padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:#fff;font-family:var(--sans)">
+        ${grupoSel}
+        ${vetaChk}
+        <button class="btn sec" data-presadd="${fk}:${id}" style="padding:4px 9px;font-size:11px">${maciza?'+ espesor':'+ medida'}</button>
+        <button class="btn sec" data-decdel="${fk}:${id}" style="padding:4px 9px;font-size:11px">Quitar ${maciza?'madera':'color'}</button>
+      </div>
+    </div>`;
+  }
+  return html;
+}
+
+function renderCantos(){
+  const cont = $('#cajaCantos'); if(!cont) return;
+  const ids = Object.keys(S.cantos || {});
+  const sel = PC().cantoSel || {};
+  let html = '';
+
+  if(!ids.length){
+    html += `<div style="padding:12px 14px;color:var(--tinta-2)">Sin cantos todavía. Agregá uno abajo.</div>`;
+  }
+
+  const porGrupo = {};
+  for(const id of ids){
+    const g = GRUPOS_CANTO[S.cantos[id].g] ? S.cantos[id].g : 'otros';
+    (porGrupo[g] = porGrupo[g] || []).push(id);
+  }
+
+  for(const g of Object.keys(GRUPOS_CANTO)){
+    const lista = porGrupo[g];
+    if(!lista) continue;
+    const clave = 'canto:' + g;
+    const abiertoG = !!grupoAbierto[clave];
+    const sinPrecio = lista.filter(id => !(S.cantos[id].pres||[]).some(p => +p.precio > 0)).length;
+    html += `<button class="grupo-cab ${abiertoG?'abierta':''}" data-grupotoggle="${clave}">
+      <span class="flecha">${abiertoG ? '▾' : '▸'}</span>${esc(GRUPOS_CANTO[g])}
+      <span class="datos">${lista.length}${
+        sinPrecio ? ` · <span class="pendiente">${sinPrecio} sin precio</span>` : ''}</span></button>`;
+    if(!abiertoG) continue;
+
+    for(const id of lista){
+      const c = S.cantos[id];
+      const pres = c.pres || [];
+      const abierto = !!decAbierto['canto:' + id];
+      const anchos = pres.map(p => p.venta === 'rollo'
+        ? `rollo ${p.largoRollo} m` : `${p.ancho} mm`).join(' · ');
+      const falta = !pres.some(p => +p.precio > 0);
+      html += `<button class="dec-cab ${abierto?'abierta':''}" data-dectoggle="canto:${id}">
+        <span class="flecha">${abierto ? '▾' : '▸'}</span>${esc(c.n)}
+        <span class="datos">${esc(anchos)}${falta ? ' · <span class="pendiente">sin precio</span>' : ''}</span></button>`;
+      if(!abierto) continue;
+
+      html += `<div class="dec-panel">
+        <table class="preciotabla"><thead><tr><th class="num">Ancho</th>
+          <th class="num">Precio</th><th>Cobra por</th><th class="num">Metros del rollo</th><th></th>
+        </tr></thead><tbody>`;
+      pres.forEach((p, i) => {
+        const usa = sel.id === id && +sel.ancho === +p.ancho;
+        html += `<tr${usa ? ' class="foco"' : ''}>
+          <td class="num"><input type="number" min="0" value="${p.ancho}" data-cpres="${id}:${i}:ancho"></td>
+          <td class="num"><input type="number" min="0" value="${p.precio}" data-cpres="${id}:${i}:precio"></td>
+          <td><select data-cventa="${id}:${i}" style="padding:4px 6px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans);font-size:11.5px">
+                <option value="metro" ${p.venta!=='rollo'?'selected':''}>metro</option>
+                <option value="rollo" ${p.venta==='rollo'?'selected':''}>rollo</option>
+              </select></td>
+          <td class="num"><input type="number" min="0" value="${p.largoRollo||0}" data-cpres="${id}:${i}:largoRollo" ${p.venta==='rollo'?'':'disabled'}></td>
+          <td style="text-align:right"><button class="borrar" data-cpresdel="${id}:${i}" title="Quitar">×</button></td>
+        </tr>`;
+      });
+      html += `</tbody></table>
+        <div class="acciones">
+          <span class="eyebrow">Nombre</span>
+          <input type="text" value="${esc(c.n)}" data-canto="${id}:n"
+            style="flex:1;min-width:140px;max-width:230px;text-align:left;padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:#fff;font-family:var(--sans)">
+          <span class="eyebrow">Grupo</span>
+          <select data-cantogrupo="${id}" style="padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:#fff;font-family:var(--sans);font-size:12px">
+            ${Object.entries(GRUPOS_CANTO).map(([gg,t]) =>
+              `<option value="${gg}" ${(GRUPOS_CANTO[c.g]?c.g:'otros')===gg?'selected':''}>${esc(t)}</option>`).join('')}
+          </select>
+          <button class="btn sec" data-cpresadd="${id}" style="padding:4px 9px;font-size:11px">+ ancho</button>
+          <button class="btn sec" data-cantodel="${id}" style="padding:4px 9px;font-size:11px">Quitar canto</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  /* el que se usa en el presupuesto abierto */
+  const opciones = [];
+  for(const id of ids)
+    for(const p of (S.cantos[id].pres || []))
+      opciones.push({v:`${id}|${p.ancho}`, t: S.cantos[id].n + (p.venta === 'rollo'
+        ? ` (rollo ${p.largoRollo} m)` : ` ${p.ancho} mm`)});
+  const vSel = `${sel.id}|${sel.ancho}`;
+
+  html += `<div style="padding:9px 14px;border-top:1px solid var(--linea);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="btn sec" id="btnCantoAdd" style="padding:5px 10px;font-size:11px">+ Agregar canto</button>
+      <span class="eyebrow" style="margin-left:auto">El de este presupuesto</span>
+      <select data-cantosel style="max-width:270px;padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans)" ${opciones.length?'':'disabled'}>
+        ${opciones.length ? opciones.map(o => `<option value="${o.v}" ${vSel===o.v?'selected':''}>${esc(o.t)}</option>`).join('')
+          : '<option>— sin cantos —</option>'}
+      </select>
+    </div>`;
+  cont.innerHTML = html;
+}
+
+function renderPrecios(){
+  renderMateriales();
+  renderCantos();
+
+  $('#tablaArmado').innerHTML =
+    `<thead><tr><th>Criterio</th><th>Tu forma</th></tr></thead><tbody>` +
+    Object.entries(ARMADO_OPCIONES).map(([k,A]) => `<tr>
+      <td>${esc(A.n)}</td>
+      <td><select data-armado="${k}" style="width:100%;max-width:290px;padding:5px 7px;border:1px solid var(--linea);border-radius:2px;background:var(--papel);font-family:var(--sans)">
+        ${Object.entries(A.op).map(([v,t]) =>
+          `<option value="${v}" ${String(S.armado[k])===v?'selected':''}>${esc(t)}</option>`).join('')}
+      </select></td>
+    </tr>`).join('') +
+    `<tr><td>Luz de puerta (mm)</td><td class="num"><input type="number" min="0" step="0.5" value="${S.armado.luzPuerta}" data-armadonum="luzPuerta"></td></tr>
+     <tr><td>Profundidad de ranura (mm)</td><td class="num"><input type="number" min="0" step="0.5" value="${S.armado.ranura}" data-armadonum="ranura"></td></tr>
+     </tbody>`;
+
+  $('#tablaHerrajes').innerHTML =
+    `<thead><tr><th>Ítem</th><th>Unidad</th><th class="num">Precio</th></tr></thead><tbody>` +
+    Object.entries(S.herrajes).map(([k,H]) => `<tr>
+      <td>${esc(H.n)}</td><td style="color:var(--tinta-2)">${esc(H.u)}</td>
+      <td class="num"><input type="number" min="0" value="${H.precio}" data-herraje="${k}"></td>
+    </tr>`).join('') + '</tbody>';
+
+  $('#tablaMO').innerHTML =
+    `<thead><tr><th>Concepto</th><th class="num">Precio por hora</th></tr></thead><tbody>` +
+    Object.entries(S.mo).map(([k,M]) => `<tr>
+      <td>${esc(M.n)}</td>
+      <td class="num"><input type="number" min="0" value="${M.precio}" data-mo="${k}"></td>
+    </tr>`).join('') + '</tbody>';
+
+  $('#tablaCoef').innerHTML =
+    `<thead><tr><th>Coeficiente</th><th class="num">Valor</th></tr></thead><tbody>` +
+    Object.entries(S.coef).map(([k,C]) => `<tr>
+      <td>${esc(C.n)}</td>
+      <td class="num"><input type="number" min="0" step="0.5" value="${C.v}" data-coef="${k}"> ${esc(C.u)}</td>
+    </tr>`).join('') + '</tbody>';
+}
+
+/* ==================================================================
+   DIBUJO — elevación de frente, en milímetros
+   ================================================================== */
+const FILAS = {bajo:'Contra el piso', aereo:'Aéreo (colgado)', alto:'De piso a techo'};
+const filaDe = mu => mu.fila || MODELOS[mu.tipo].fila || 'bajo';
+
+/* dibuja un mueble; X y Ybase en mm, Ybase medido desde el piso */
+function dibujarMueble(mu, C, X, Ybase, HT){
+  const A = +mu.med.ancho || 0, H = +mu.med.alto || 0;
+  if(A <= 0 || H <= 0) return '';
+  const y = HT - Ybase - H;
+  const l = Math.max(2, +C.luzPuerta || 3);
+  const f = v => v.toFixed(1);
+  const R = (x,yy,w,h,c) => w>0 && h>0
+    ? `<rect x="${f(X+x)}" y="${f(y+yy)}" width="${f(w)}" height="${f(h)}" class="${c}"/>` : '';
+  const L = (x1,y1,x2,y2,c) =>
+    `<line x1="${f(X+x1)}" y1="${f(y+y1)}" x2="${f(X+x2)}" y2="${f(y+y2)}" class="${c}"/>`;
+
+  let g = R(0, 0, A, H, 'd-cuerpo');
+  const t = mu.tipo;
+
+  if(t === 'bajo' || t === 'alacena' || t === 'placard'){
+    const ah = H - 2*l, aw = A/2 - 1.5*l;
+    for(let i = 0; i < 2; i++){
+      const px = l + i*(A/2 - l/2);
+      g += R(px, l, aw, ah, 'd-puerta');
+      const hx = i === 0 ? px + aw - 28 : px + 28;
+      g += L(hx, H/2 - Math.min(90, H/4), hx, H/2 + Math.min(90, H/4), 'd-tirador');
+    }
+    if(t === 'placard') g += L(A/2, 0, A/2, H, 'd-linea');
+  }
+  else if(t === 'cajonera'){
+    const nc = 3, hh = (H - (nc+1)*l)/nc;
+    for(let i = 0; i < nc; i++){
+      const py = l + i*(hh + l);
+      g += R(l, py, A - 2*l, hh, 'd-puerta');
+      g += L(A/2 - 75, py + hh/2, A/2 + 75, py + hh/2, 'd-tirador');
+    }
+  }
+  else if(t === 'estanteria'){
+    const N = Math.max(0, +mu.med.estantes || 0);
+    for(let i = 1; i <= N; i++) g += L(6, H*i/(N+1), A - 6, H*i/(N+1), 'd-linea');
+  }
+  return g;
+}
+
+/* elevación de toda la cocina: bajos y altos apoyados, aéreos colgados */
+function dibujoConjunto(){
+  const unidades = [];
+  for(const mu of S.muebles){
+    const c = Math.min(Math.max(0, +mu.cant || 0), 8);
+    for(let i = 0; i < c; i++) unidades.push(mu);
+  }
+  if(!unidades.length) return '';
+
+  const hAereo = +S.alturaAereos || 1400;
+  const SEP = 6;
+  const plan = [];
+  let HT = 0;
+
+  const validos = unidades.filter(mu => (+mu.med.ancho||0) > 0 && (+mu.med.alto||0) > 0);
+  // los de piso a techo van primero: ocupan toda la altura y nada puede colgarse encima
+  let xAlto = 0;
+  for(const mu of validos.filter(m => filaDe(m) === 'alto')){
+    plan.push({mu, X:xAlto, Y:0});
+    xAlto += (+mu.med.ancho) + SEP;
+    HT = Math.max(HT, +mu.med.alto);
+  }
+  // bajos y aéreos comparten el tramo restante, uno arriba del otro
+  let xPiso = xAlto, xAereo = xAlto;
+  for(const mu of validos){
+    const f = filaDe(mu);
+    if(f === 'alto') continue;
+    const A = +mu.med.ancho, H = +mu.med.alto;
+    if(f === 'aereo'){
+      plan.push({mu, X:xAereo, Y:hAereo}); xAereo += A + SEP;
+      HT = Math.max(HT, hAereo + H);
+    }else{
+      plan.push({mu, X:xPiso, Y:0}); xPiso += A + SEP;
+      HT = Math.max(HT, H);
+    }
+  }
+  if(!plan.length) return '';
+
+  const W = Math.max(xPiso, xAereo, xAlto) - SEP;
+  HT = Math.ceil(HT/100)*100;
+  const m = 90, pie = 150;                       // margen y espacio para la cota
+  const cuerpo = plan.map(u => dibujarMueble(u.mu, PC().armado, u.X, u.Y, HT)).join('');
+
+  return `<svg viewBox="${-m} ${-m} ${W + 2*m} ${HT + m + pie}" class="dibujo" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${-m/2}" y1="${HT}" x2="${W + m/2}" y2="${HT}" class="d-piso"/>
+    ${cuerpo}
+    <line x1="0" y1="${HT + 55}" x2="${W}" y2="${HT + 55}" class="d-cota"/>
+    <text x="${W/2}" y="${HT + 125}" class="d-texto">${nf.format(Math.round(W))} mm</text>
+  </svg>`;
+}
+
+/* miniatura de un solo mueble */
+function dibujoMini(mu){
+  const A = +mu.med.ancho || 0, H = +mu.med.alto || 0;
+  if(A <= 0 || H <= 0) return '';
+  const m = 30;
+  return `<svg viewBox="${-m} ${-m} ${A + 2*m} ${H + 2*m}" class="dibujo-mini" xmlns="http://www.w3.org/2000/svg">
+    ${dibujarMueble(mu, PC().armado, 0, 0, H)}
+  </svg>`;
+}
+
+/* ==================================================================
+   ARCHIVO DE PRESUPUESTOS
+   ================================================================== */
+function renderArchivo(){
+  const hay = S.guardados.length;
+  $('#vacioArchivo').style.display = hay ? 'none' : 'block';
+  if(!hay){ $('#tablaArchivo').innerHTML=''; return; }
+
+  const colorEstado = e => e==='Aprobado' ? 'var(--verde)' : e==='Perdido' ? 'var(--rojo)' : 'var(--tinta-2)';
+
+  $('#tablaArchivo').innerHTML =
+    `<thead><tr><th>N°</th><th>Cliente / obra</th><th>Fecha</th><th>Estado</th>
+      <th class="num">Total</th><th></th></tr></thead><tbody>` +
+    S.guardados.map(d => `<tr${d.id===S.docId?' style="background:var(--papel-2)"':''}>
+      <td style="font-family:var(--mono)">${esc(d.numero)}</td>
+      <td><a href="#" data-abrir="${d.id}" style="color:var(--pino);font-weight:600">${esc(d.cliente)}</a></td>
+      <td style="font-family:var(--mono);font-size:12px">${fechaLarga(d.fecha)}</td>
+      <td style="color:${colorEstado(d.estado)};font-size:12px">${esc(d.estado)}</td>
+      <td class="num">${money(d.total)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn sec" style="padding:3px 8px;font-size:10px" data-duplicar="${d.id}">Duplicar</button>
+        <button class="borrar" data-borrardoc="${d.id}" title="Borrar">×</button>
+      </td>
+    </tr>`).join('') + '</tbody>';
+}
+
+function snapshot(){
+  const T = calcularTodo();
+  return {
+    id: S.docId || ('p' + Date.now()),
+    empresaId: S.empresa.id,               // sello de la empresa dueña (para el futuro multiempresa)
+    numero: S.docNumero || String(S.proximoNumero).padStart(4,'0'),
+    cliente: (S.cliente || '').trim() || 'Sin nombre',
+    fecha: S.fecha || hoy(),
+    estado: S.estado || 'Borrador',
+    total: T.total,
+    muebles: JSON.parse(JSON.stringify(S.muebles)),
+    // precios congelados: con esto el presupuesto se reabre e imprime con los
+    // mismos números que el día que se guardó, aunque hoy cobres distinto.
+    precios: clon({
+      armado: PC().armado, placas: PC().placas, herrajes: PC().herrajes,
+      mo: PC().mo, coef: PC().coef, cantos: PC().cantos, cantoSel: PC().cantoSel,
+      materiales: PC().materiales, materialSel: PC().materialSel, interiorId: PC().interiorId
+    })
+  };
+}
+
+function guardarDoc(){
+  if(!S.muebles.length){ avisar('Agregá al menos un mueble antes de guardar.', true); return; }
+  const d = snapshot();
+  const i = S.guardados.findIndex(g => g.id === d.id);
+  if(i >= 0) S.guardados[i] = d;
+  else { S.guardados.unshift(d); S.proximoNumero = Math.max(S.proximoNumero, +d.numero) + 1; }
+  S.docId = d.id; S.docNumero = d.numero;
+  docPrecios = clon(d.precios);          // a partir de acá el presupuesto queda con sus precios congelados
+  render();
+  avisar('Guardado como N° ' + d.numero);
+}
+
+function nuevoDoc(){
+  S.docId = null; S.docNumero = null;
+  docPrecios = null;                    // presupuesto nuevo: precios de hoy
+  S.muebles = []; S.cliente = ''; S.fecha = hoy(); S.estado = 'Borrador';
+  sincronizarCampos(); irA('presupuesto'); render();
+}
+
+function abrirDoc(id){
+  const d = S.guardados.find(g => g.id === id);
+  if(!d) return;
+  S.docId = d.id; S.docNumero = d.numero;
+  docPrecios = d.precios ? clon(d.precios) : null;   // se abre con sus precios congelados
+  // un presupuesto viejo puede traer los materiales en el formato anterior
+  if(docPrecios && docPrecios.materiales) migrarMateriales(docPrecios.materiales);
+  S.muebles = JSON.parse(JSON.stringify(d.muebles));
+  S.cliente = d.cliente; S.fecha = d.fecha; S.estado = d.estado;
+  sincronizarCampos(); irA('presupuesto'); render();
+}
+
+function duplicarDoc(id){
+  const d = S.guardados.find(g => g.id === id);
+  if(!d) return;
+  S.docId = null; S.docNumero = null;
+  docPrecios = null;                    // la copia se recotiza a precios de hoy
+  if(d.precios && d.precios.materialSel) S.materialSel = clon(d.precios.materialSel);  // pero conserva el material elegido
+  S.muebles = JSON.parse(JSON.stringify(d.muebles));
+  S.cliente = d.cliente + ' (copia)'; S.fecha = hoy(); S.estado = 'Borrador';
+  sincronizarCampos(); irA('presupuesto'); render();
+}
+
+let tAviso;
+function avisar(txt, error){
+  const el = $('#avisoGuardado');
+  el.textContent = txt;
+  el.style.color = error ? 'var(--rojo)' : 'var(--verde)';
+  clearTimeout(tAviso);
+  tAviso = setTimeout(() => { el.textContent = ''; }, 3500);
+}
+
+function irA(v){
+  vista = v;
+  // marca el botón activo en las dos barras (lateral e inferior)
+  document.querySelectorAll('[data-vista]').forEach(t =>
+    t.setAttribute('aria-current', t.dataset.vista === v ? 'page' : 'false'));
+  ['presupuesto','despiece','archivo','precios'].forEach(x =>
+    $('#v-'+x).classList.toggle('oculto', x !== v));
+}
+
+function sincronizarCampos(){
+  $('#cliente').value = S.cliente || '';
+  $('#fecha').value = S.fecha || hoy();
+  $('#estado').value = S.estado || 'Borrador';
+  $('#empNombre').value = S.empresa.nombre || '';
+  $('#empContacto').value = S.empresa.contacto || '';
+  $('#validez').value = +S.validez > 0 ? S.validez : '';
+  $('#hAereos').value = S.alturaAereos;
+  if($('#corteKerf')) $('#corteKerf').value = S.armado.corte;
+  $('#condiciones').value = S.condiciones || '';
+  $('#detallar').checked = !!S.detallarPrecios;
+  pintarLogo();
+}
+
+/* muestra el logo guardado en el recuadro de "Tus datos" */
+function pintarLogo(){
+  const box = $('#logoPreview'), quitar = $('#btnLogoQuitar'), subir = $('#btnLogo');
+  if(!box) return;
+  const hay = !!S.empresa.logo;
+  box.style.backgroundImage = hay ? `url("${S.empresa.logo}")` : 'none';
+  box.style.display = hay ? 'block' : 'none';
+  if(quitar) quitar.style.display = hay ? 'inline-block' : 'none';
+  if(subir) subir.textContent = hay ? 'Cambiar logo' : 'Subir logo';
+}
+
+/* achica el logo a algo liviano (máx 360 px de lado) y lo guarda como
+   texto adentro del estado. Así viaja en el backup y no necesita servidor. */
+function cargarLogo(file){
+  if(!file) return;
+  if(!/^image\/(png|jpeg|webp)$/.test(file.type)){
+    avisar('El logo tiene que ser PNG o JPG.', true); return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 360;
+      let {width:w, height:h} = img;
+      if(w > MAX || h > MAX){ const k = MAX/Math.max(w,h); w = Math.round(w*k); h = Math.round(h*k); }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      // PNG conserva la transparencia del logo
+      S.empresa.logo = cv.toDataURL('image/png');
+      pintarLogo(); guardar();
+      avisar('Logo cargado. Ya sale en los presupuestos.');
+    };
+    img.onerror = () => avisar('No pude leer esa imagen.', true);
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ==================================================================
+   LOS DOS PAPELES
+   ================================================================== */
+function encabezado(titulo){
+  const num = S.docNumero || 'sin guardar';
+  return `<div class="doc-cab">
+    <div>
+      ${S.empresa.logo ? `<img src="${S.empresa.logo}" class="doc-logo" alt="">` : ''}
+      <div class="doc-emp">${esc(S.empresa.nombre || 'Tu taller')}</div>
+      <div class="doc-min">${esc(S.empresa.contacto || '')}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="doc-tit">${titulo}</div>
+      <div class="doc-min">N° ${esc(num)} · ${fechaLarga(S.fecha)}</div>
+    </div>
+  </div>
+  <div class="doc-cli"><b>Cliente / obra:</b> ${esc(S.cliente || '—')}</div>`;
+}
+
+/* El pie del presupuesto: solo lo que el taller escribió. Si no puso validez
+   ni condiciones, no sale nada — mejor vacío que una condición inventada. */
+function pieDelPresupuesto(){
+  const lineas = [];
+  if(+S.validez > 0) lineas.push(`<p><b>Validez:</b> ${+S.validez} días desde la fecha de emisión.</p>`);
+  for(const l of (S.condiciones||'').split('\n').filter(x => x.trim())) lineas.push('<p>'+esc(l)+'</p>');
+  return lineas.length ? `<div class="doc-pie">${lineas.join('')}</div>` : '';
+}
+
+function papelCliente(){
+  const T = calcularTodo();
+  const filas = S.muebles.map((mu,i) => {
+    const modelo = MODELOS[mu.tipo];
+    const med = Object.entries(mu.med)
+      .filter(([k]) => ['ancho','alto','prof'].includes(k)).map(([,v]) => v).join(' × ');
+    return `<tr>
+      <td style="font-family:var(--mono);color:var(--tinta-2)">${String(i+1).padStart(2,'0')}</td>
+      <td style="width:74px">${dibujoMini(mu)}</td>
+      <td>${esc(mu.nombre || modelo.nombre)}<div class="doc-min">${med} mm</div></td>
+      <td class="num">${mu.cant}</td>
+      ${S.detallarPrecios ? `<td class="num">${money(costoDeUno(T.porMueble[i]))}</td>` : ''}
+    </tr>`;
+  }).join('');
+
+  const conjunto = dibujoConjunto();
+  return encabezado('PRESUPUESTO') + `
+    ${conjunto ? `<div class="doc-dibujo">${conjunto}</div>` : ''}
+    <table class="doc-tabla">
+      <thead><tr><th></th><th></th><th>Detalle</th><th class="num">Cant.</th>
+      ${S.detallarPrecios ? '<th class="num">Importe</th>' : ''}</tr></thead>
+      <tbody>${filas}</tbody>
+    </table>
+    <div class="doc-totales">
+      <div><span>Subtotal</span><span>${money(T.neto)}</span></div>
+      <div><span>IVA ${PC().coef.iva.v}%</span><span>${money(T.iva)}</span></div>
+      <div class="doc-total"><span>TOTAL</span><span>${money(T.total)}</span></div>
+    </div>
+    ${pieDelPresupuesto()}`;
+}
+
+/* el mapa de corte listo para el papel del taller */
+function mapaCorteTaller(T){
+  const roles = piezasParaCorte(T).filter(r => !r.noPlaca && r.opt.placas.length);
+  if(!roles.length) return '';
+  let html = '<h3 class="doc-h">Mapa de corte</h3>';
+  for(const r of roles){
+    const o = r.opt;
+    html += `<div class="corte-taller">
+      <div class="doc-min"><b>${esc(r.placa.n)}</b> — ${o.n} placa${o.n===1?'':'s'} · desperdicio ${
+        nf.format(Math.round(o.desperdicio*100))}%${r.placa.veta ? ' · con veta (no se giran)' : ''}</div>
+      ${o.grandes.length ? `<div class="doc-min" style="color:var(--cinta-osc);margin-top:3px">⚠ No entran en la placa (a medida / varios paños): ${
+        o.grandes.map(g => esc(g.nombre)+' '+Math.round(g.largo)+'×'+Math.round(g.ancho)).join(' · ')}</div>` : ''}
+      <div class="corte-placas" style="margin-top:8px">${o.placas.map((pl,i) => dibujoPlaca(pl, o.plW, o.plH, i+1)).join('')}</div>
+    </div>`;
+  }
+  return html;
+}
+
+function papelTaller(){
+  const T = calcularTodo();
+  const PLC = placasEfectivas(PC());
+  let d = '';
+  for(const g of T.piezas){
+    if(!g.lista.length) continue;
+    d += `<tr class="grupo"><td colspan="5">${String(g.idx).padStart(2,'0')} · ${esc(g.mueble)}</td></tr>`;
+    for(const pz of g.lista){
+      d += `<tr><td>${esc(pz.nombre)}</td><td>${esc(PLC[pz.mat].n)}</td>
+        <td class="num">${nf.format(Math.round(pz.largo))}</td>
+        <td class="num">${nf.format(Math.round(pz.ancho))}</td>
+        <td class="num">${pz.total}</td></tr>`;
+    }
+  }
+  const compras = Object.entries(T.placas).map(([k,v]) =>
+      `<tr><td>${esc(PLC[k].n)}</td><td class="num">${esc(v.detalle)}</td></tr>`).join('')
+    + Object.entries(T.detHerrajes).map(([k,v]) => {
+        const H = itemDeCompra(PC(), k);
+        return H ? `<tr><td>${esc(H.n)}</td><td class="num">${v.detalle || (nf1.format(v.q) + ' ' + esc(H.u))}</td></tr>` : '';
+      }).join('');
+
+  return encabezado('ORDEN DE TALLER') + `
+    <div class="doc-min" style="margin:10px 0 4px">
+      Material: ${esc(decoradoElegido(PC()).n)} · cajones en ${esc(decoradoInterior(PC()).n)}<br>
+      Armado: ${ARMADO_OPCIONES.pasante.op[PC().armado.pasante]} · cuerpo ${espesorTxt(espesorCuerpo(PC()))} ·
+      fondo ${PC().armado.fondo} · luz de puerta ${PC().armado.luzPuerta} mm
+    </div>
+    <h3 class="doc-h">Despiece</h3>
+    <table class="doc-tabla">
+      <thead><tr><th>Pieza</th><th>Material</th><th class="num">Largo</th><th class="num">Ancho</th><th class="num">Cant.</th></tr></thead>
+      <tbody>${d}</tbody>
+    </table>
+    <h3 class="doc-h">Lista de compras</h3>
+    <table class="doc-tabla"><tbody>${compras}</tbody></table>
+    ${mapaCorteTaller(T)}
+    <div class="doc-pie"><p>Horas previstas: ${nf1.format(T.horas.taller)} de taller · ${nf1.format(T.horas.colocacion)} de colocación.</p></div>`;
+}
+
+/* Muestra el papel en pantalla. Antes disparaba el cuadro de imprimir del
+   navegador y listo: adentro de la página web ese cuadro está bloqueado, así
+   que no pasaba nada. Ahora primero se ve, y de ahí se imprime si querés. */
+function verPapel(tipo){
+  if(!S.muebles.length){ avisar('No hay muebles para imprimir.', true); return; }
+  $('#salida').innerHTML = tipo === 'cliente' ? papelCliente() : papelTaller();
+  $('#tituloPapel').textContent = tipo === 'cliente'
+    ? 'Papel del cliente — así lo va a ver él'
+    : 'Papel del taller — despiece y compras';
+  document.body.classList.add('imprimiendo');
+  window.scrollTo(0, 0);
+}
+
+function volverAlPrograma(){
+  document.body.classList.remove('imprimiendo');
+  $('#salida').innerHTML = '';
+}
+
+function imprimirPapel(){
+  try{ window.print(); }
+  catch(err){ avisar('Tu navegador no dejó abrir el cuadro de imprimir. Probá con Ctrl+P.', true); }
+}
+
+/* ==================================================================
+   EVENTOS
+   ================================================================== */
+document.addEventListener('click', e => {
+  const tab = e.target.closest('[data-vista]');
+  if(tab){ irA(tab.dataset.vista); return; }
+
+  const ab = e.target.closest('[data-abrir]');
+  if(ab){ e.preventDefault(); abrirDoc(ab.dataset.abrir); return; }
+
+  const du = e.target.closest('[data-duplicar]');
+  if(du){ duplicarDoc(du.dataset.duplicar); return; }
+
+  const bd = e.target.closest('[data-borrardoc]');
+  if(bd){
+    const d = S.guardados.find(g => g.id === bd.dataset.borrardoc);
+    if(d && confirm(`¿Borrar el presupuesto N° ${d.numero} de ${d.cliente}?`)){
+      S.guardados = S.guardados.filter(g => g.id !== d.id);
+      if(S.docId === d.id){ S.docId = null; S.docNumero = null; }
+      render();
+    }
+    return;
+  }
+
+  if(e.target.id === 'btnGuardar'){ guardarDoc(); return; }
+  if(e.target.id === 'btnNuevo'){ nuevoDoc(); return; }
+  if(e.target.id === 'btnExportar'){ exportarTodo(); return; }
+  if(e.target.id === 'btnImportar'){ $('#fileImport').click(); return; }
+  if(e.target.id === 'btnLogo'){ $('#fileLogo').click(); return; }
+  if(e.target.id === 'btnLogoQuitar'){ S.empresa.logo = ''; pintarLogo(); guardar(); return; }
+  if(e.target.id === 'btnImpCliente'){ verPapel('cliente'); return; }
+  if(e.target.id === 'btnImpTaller'){ verPapel('taller'); return; }
+  if(e.target.id === 'btnVolverApp'){ volverAlPrograma(); return; }
+  if(e.target.id === 'btnImprimirYa'){ imprimirPapel(); return; }
+
+  const savemod = e.target.closest('[data-savemodelo]');
+  if(savemod){
+    const mu = S.muebles[+savemod.dataset.savemodelo];
+    if(!mu) return;
+    const nombre = (mu.nombre || MODELOS[mu.tipo].nombre || 'Mueble').trim();
+    S.modelosGuardados = S.modelosGuardados || [];
+    S.modelosGuardados.push({id:nuevoId('mod_'), nombre, tipo:mu.tipo, med:{...mu.med}});
+    guardar();
+    render();
+    avisar(`Guardé "${nombre}" en tus modelos. Está abajo, en "Agregar mueble".`);
+    return;
+  }
+
+  // el × de un modelo guardado: se chequea ANTES que el chip que lo contiene
+  const delmod = e.target.closest('[data-delmodelo]');
+  if(delmod){
+    const id = delmod.dataset.delmodelo;
+    S.modelosGuardados = (S.modelosGuardados || []).filter(m => m.id !== id);
+    guardar();
+    render();
+    return;
+  }
+
+  const addmod = e.target.closest('[data-addmodelo]');
+  if(addmod){
+    const md = (S.modelosGuardados || []).find(m => m.id === addmod.dataset.addmodelo);
+    if(md && MODELOS[md.tipo]){
+      S.muebles.push({tipo:md.tipo, nombre:md.nombre, cant:1, abierto:true, med:{...md.med}});
+      render();
+    }
+    return;
+  }
+
+  const add = e.target.closest('[data-add]');
+  if(add){
+    const k = add.dataset.add;
+    S.muebles.push({tipo:k, nombre:'', cant:1, abierto:true, med:{...MODELOS[k].med}});
+    render();
+    return;
+  }
+
+  if(e.target.id === 'btnImportarPlanilla'){ abrirImportar(); return; }
+  if(e.target.id === 'impCerrar'){ abrirImportar(); return; }
+  if(e.target.id === 'impArchivoBtn'){ $('#impArchivo').click(); return; }
+  if(e.target.id === 'impLeer'){
+    const texto = ($('#impTexto') || {}).value || '';
+    const r = leerPlanilla(texto);
+    importAviso = r.error || '';
+    importFilas = r.filas || null;
+    renderImportar();
+    return;
+  }
+  if(e.target.id === 'impAgregar'){
+    const nuevas = (importFilas || []).filter(f => f.estado !== 'error');
+    for(const f of nuevas)
+      S.muebles.push({tipo:f.tipo, nombre:f.nombre, cant:f.cant, abierto:false, med:{...f.med}});
+    importFilas = null; importAviso = '';
+    $('#cajaImportar').classList.add('oculto');
+    render();
+    avisar(`Se agregaron ${nuevas.length} mueble${nuevas.length===1?'':'s'} desde la planilla.`);
+    return;
+  }
+
+  const decAdd = e.target.closest('[data-decadd]');
+  if(decAdd){
+    const fk = decAdd.dataset.decadd, fam = S.materiales[fk];
+    const id = 'd' + Date.now().toString(36);
+    fam.opciones[id] = esMaciza(fam)
+      ? {n:'Nueva madera', g:'otros', pres:[nuevaTabla(1)]}
+      : {n:'Nuevo color',  g:'otros', pres:[nuevaPres(18, MED_STD, 0)]};
+    if(fk === 'melamina' && !S.materiales.melamina.opciones[S.interiorId]) S.interiorId = id;
+    filtroMat = '';
+    espesorMat = 'todos';               // el nuevo arranca en 18, pero que se vea igual
+    famAbierta[fk] = true;
+    grupoAbierto[fk + ':otros'] = true;
+    decAbierto[fk + ':' + id] = true;    // el nuevo queda abierto y listo para escribirle
+    render();
+    return;
+  }
+
+  const presAdd = e.target.closest('[data-presadd]');
+  if(presAdd){
+    const [fk,id] = presAdd.dataset.presadd.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    if(d){
+      d.pres = d.pres || [];
+      const ult = d.pres[d.pres.length-1];
+      d.pres.push(esMaciza(S.materiales[fk])
+        ? nuevaTabla(ult ? ult.esp/PULGADA : 1, ult ? ult.largo : 3000, ult ? ult.ancho : 150)
+        : nuevaPres(ult ? ult.esp : 18, ult ? [ult.ancho, ult.alto] : MED_STD, 0));
+      render();
+    }
+    return;
+  }
+
+  const presDel = e.target.closest('[data-presdel]');
+  if(presDel){
+    const [fk,id,i] = presDel.dataset.presdel.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    if(d && d.pres){ d.pres.splice(+i, 1); render(); }
+    return;
+  }
+
+  if(e.target.closest('[data-filtroclear]')){ filtroMat = ''; renderMateriales(); return; }
+
+  const famTog = e.target.closest('[data-famtoggle]');
+  if(famTog){
+    const fk = famTog.dataset.famtoggle;
+    famAbierta[fk] = !famAbierta[fk];
+    if(filtroMat) filtroMat = '';        // buscando, las familias se abren solas: al tocar una, se sale del buscador
+    renderMateriales();
+    return;
+  }
+
+  const espTog = e.target.closest('[data-esptoggle]');
+  if(espTog){
+    const v = espTog.dataset.esptoggle;
+    espesorMat = v === 'todos' ? 'todos' : +v;
+    renderMateriales();
+    return;
+  }
+
+  /* los grupos de materiales y los de cantos viven en cajas distintas: se
+     redibuja la que corresponde según de dónde salga el toque */
+  const redibujarLista = k => k.startsWith('canto:') ? renderCantos() : renderMateriales();
+
+  const grupoTog = e.target.closest('[data-grupotoggle]');
+  if(grupoTog){
+    const k = grupoTog.dataset.grupotoggle;
+    grupoAbierto[k] = !grupoAbierto[k];
+    redibujarLista(k);
+    return;
+  }
+
+  const decTog = e.target.closest('[data-dectoggle]');
+  if(decTog){
+    const k = decTog.dataset.dectoggle;
+    decAbierto[k] = !decAbierto[k];
+    redibujarLista(k);
+    return;
+  }
+
+  const decDel = e.target.closest('[data-decdel]');
+  if(decDel){
+    const [fk,id] = decDel.dataset.decdel.split(':');
+    const fam = S.materiales[fk];
+    if(fam && fam.opciones[id] && confirm(`¿Quitar "${fam.opciones[id].n}"?`)){
+      delete fam.opciones[id];
+      const sello = fk + ':' + id;
+      if(!S.decoradosQuitados.includes(sello)) S.decoradosQuitados.push(sello);
+      if(S.materialSel.fam === fk && S.materialSel.id === id) S.materialSel.id = primerDecorado(fam);
+      if(fk === 'melamina' && S.interiorId === id) S.interiorId = primerDecorado(S.materiales.melamina);
+      render();
+    }
+    return;
+  }
+
+  const del = e.target.closest('[data-del]');
+  if(del){ S.muebles.splice(+del.dataset.del, 1); render(); return; }
+
+  const tog = e.target.closest('[data-toggle]');
+  if(tog){
+    const i = +tog.dataset.toggle;
+    S.muebles[i].abierto = !S.muebles[i].abierto;
+    render();
+    return;
+  }
+
+  if(e.target.id === 'btnCantoAdd'){
+    const id = 'c' + Date.now().toString(36);
+    S.cantos[id] = {n:'Canto nuevo', g:'otros', pres:[nuevoAncho(22)]};
+    grupoAbierto['canto:otros'] = true;
+    decAbierto['canto:' + id] = true;
+    render();
+    return;
+  }
+
+  const cantoDel = e.target.closest('[data-cantodel]');
+  if(cantoDel){
+    const id = cantoDel.dataset.cantodel;
+    if(S.cantos[id] && confirm(`¿Quitar "${S.cantos[id].n}"?`)){
+      delete S.cantos[id];
+      if((S.cantoSel||{}).id === id) S.cantoSel = {id: primerCanto(S), ancho:22};
+      render();
+    }
+    return;
+  }
+
+  const cpresAdd = e.target.closest('[data-cpresadd]');
+  if(cpresAdd){
+    const c = S.cantos[cpresAdd.dataset.cpresadd];
+    if(c){ c.pres = c.pres || []; c.pres.push(nuevoAncho(50)); render(); }
+    return;
+  }
+
+  const cpresDel = e.target.closest('[data-cpresdel]');
+  if(cpresDel){
+    const [id,i] = cpresDel.dataset.cpresdel.split(':');
+    const c = S.cantos[id];
+    if(c && c.pres){ c.pres.splice(+i, 1); render(); }
+    return;
+  }
+
+  if(e.target.id === 'btnVaciar'){
+    if(confirm('Se borran los muebles de este presupuesto. Los guardados y los precios quedan.')){
+      nuevoDoc();
+    }
+  }
+});
+
+/* con Escape se sale de la vista del papel */
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.body.classList.contains('imprimiendo')) volverAlPrograma();
+});
+
+document.addEventListener('change', e => {
+  const t = e.target;
+  if(t.id === 'fileImport'){ importarTodo(t.files[0]); t.value = ''; return; }
+  if(t.id === 'impArchivo'){ leerArchivoPlanilla(t.files[0]); t.value = ''; return; }
+  if(t.id === 'fileLogo'){ cargarLogo(t.files[0]); t.value = ''; return; }
+  if(t.id === 'estado'){ S.estado = t.value; guardar(); return; }
+  if(t.id === 'fecha'){ S.fecha = t.value; guardar(); return; }
+  if(t.id === 'detallar'){ S.detallarPrecios = t.checked; guardar(); return; }
+  if('matfam' in t.dataset){
+    const fam = PC().materiales[t.value] || {opciones:{}};
+    PC().materialSel = {fam:t.value, id: primerDecorado(fam), esp:null, ancho:null, alto:null};
+    render(); return;
+  }
+  if('matid' in t.dataset){
+    // al cambiar de material se olvida la medida elegida: la nueva puede no existir
+    PC().materialSel = {...(PC().materialSel||{}), id: t.value, esp:null, ancho:null, alto:null};
+    render(); return;
+  }
+  if('matmedida' in t.dataset){
+    const [ancho, alto] = t.value.split('x').map(Number);
+    PC().materialSel = {...(PC().materialSel||{}), ancho, alto};
+    render(); return;
+  }
+  if('matesp' in t.dataset){
+    // cambia el espesor de la tabla: cambia el precio Y todas las medidas del despiece
+    PC().materialSel = {...(PC().materialSel||{}), esp: +t.value};
+    render(); return;
+  }
+  if(t.dataset && t.dataset.venta){
+    const [fk,id,i] = t.dataset.venta.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    if(d && d.pres && d.pres[+i]){ d.pres[+i].venta = t.value; render(); }
+    return;
+  }
+  if(t.dataset && t.dataset.decgrupo){
+    const [fk,id] = t.dataset.decgrupo.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    if(d){ d.g = t.value; grupoAbierto[fk + ':' + t.value] = true; render(); }
+    return;
+  }
+  if(t.dataset && t.dataset.decveta){
+    const [fk,id] = t.dataset.decveta.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    if(d){ d.veta = t.checked; render(); }
+    return;
+  }
+  if('cantosel' in t.dataset){
+    const [id, ancho] = t.value.split('|');
+    PC().cantoSel = {id, ancho:+ancho};
+    render(); return;
+  }
+  if(t.dataset && t.dataset.cventa){
+    const [id,i] = t.dataset.cventa.split(':');
+    const p = S.cantos[id] && S.cantos[id].pres[+i];
+    if(p){
+      p.venta = t.value;
+      if(p.venta === 'rollo' && !p.largoRollo) p.largoRollo = 100;
+      render();
+    }
+    return;
+  }
+  if(t.dataset && t.dataset.cantogrupo){
+    const c = S.cantos[t.dataset.cantogrupo];
+    if(c){ c.g = t.value; grupoAbierto['canto:' + t.value] = true; render(); }
+    return;
+  }
+  if('interior' in t.dataset){ S.interiorId = t.value; render(); return; }
+  if(t.dataset && t.dataset.fila){ S.muebles[t.dataset.fila].fila = t.value; render(); return; }
+  if(e.target.dataset && e.target.dataset.armado){
+    S.armado[e.target.dataset.armado] = e.target.value;
+    render();
+  }
+});
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  const num = v => v === '' ? 0 : +v;
+
+  if(t.id === 'cliente'){ S.cliente = t.value; guardar(); return; }
+  if(t.id === 'empNombre'){ S.empresa.nombre = t.value; guardar(); return; }
+  if(t.id === 'empContacto'){ S.empresa.contacto = t.value; guardar(); return; }
+  if(t.id === 'condiciones'){ S.condiciones = t.value; guardar(); return; }
+  if(t.id === 'validez'){ S.validez = num(t.value); guardar(); return; }
+  if(t.id === 'hAereos'){ S.alturaAereos = num(t.value); return actualizarSuave(); }
+  if(t.id === 'corteKerf'){ S.armado.corte = num(t.value); renderCorte(); guardar(); return; }
+
+  if(t.dataset.med){
+    const [i,k] = t.dataset.med.split(':');
+    S.muebles[i].med[k] = num(t.value);
+    return actualizarSuave();
+  }
+  if(t.dataset.cant){ S.muebles[t.dataset.cant].cant = num(t.value); return actualizarSuave(); }
+  if(t.dataset.nom){ S.muebles[t.dataset.nom].nombre = t.value; return actualizarSuave(); }
+  if(t.dataset.dec){
+    const [fk,id,f] = t.dataset.dec.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    if(d){ d[f] = (f === 'n') ? t.value : num(t.value); return actualizarSuave(); }
+    return;
+  }
+  if(t.dataset.pres){
+    const [fk,id,i,f] = t.dataset.pres.split(':');
+    const d = S.materiales[fk] && S.materiales[fk].opciones[id];
+    const p = d && d.pres && d.pres[+i];
+    if(p){ p[f] = num(t.value); return actualizarSuave(); }
+    return;
+  }
+  if('filtromat' in t.dataset){
+    filtroMat = t.value;
+    renderMateriales();
+    const nuevo = document.querySelector('[data-filtromat]');   // el input se redibujó: le devuelvo el foco
+    if(nuevo){ nuevo.focus(); nuevo.setSelectionRange(nuevo.value.length, nuevo.value.length); }
+    return;
+  }
+  if(t.dataset.placa){
+    const [k,f] = t.dataset.placa.split(':');
+    S.placas[k][f] = num(t.value); return actualizarSuave();
+  }
+  if(t.dataset.canto){
+    const [id,f] = t.dataset.canto.split(':');
+    const c = S.cantos[id];
+    if(c){ c[f] = (f === 'n') ? t.value : num(t.value); return actualizarSuave(); }
+    return;
+  }
+  if(t.dataset.cpres){
+    const [id,i,f] = t.dataset.cpres.split(':');
+    const c = S.cantos[id];
+    const p = c && c.pres && c.pres[+i];
+    if(p){ p[f] = num(t.value); return actualizarSuave(); }
+    return;
+  }
+  if(t.dataset.herraje){ S.herrajes[t.dataset.herraje].precio = num(t.value); return actualizarSuave(); }
+  if(t.dataset.mo){ S.mo[t.dataset.mo].precio = num(t.value); return actualizarSuave(); }
+  if(t.dataset.coef){ S.coef[t.dataset.coef].v = num(t.value); return actualizarSuave(); }
+  if(t.dataset.armadonum){ S.armado[t.dataset.armadonum] = num(t.value); return actualizarSuave(); }
+});
+
+/* recalcula sin redibujar los inputs que se están tipeando */
+function actualizarSuave(){
+  const T = calcularTodo();
+  $('#totalTop').textContent = money(T.total);
+  renderResumen(T);
+  renderDespiece(T);
+  renderCompras(T);
+  renderCorte();
+  $('#cajaDibujo').innerHTML = dibujoConjunto() ||
+    '<div class="vacio" style="padding:20px"><p class="eyebrow">El dibujo aparece al agregar muebles</p></div>';
+  S.muebles.forEach((mu,i) => {
+    const cab = document.querySelector(`[data-toggle="${i}"]`);
+    if(!cab) return;
+    const modelo = MODELOS[mu.tipo];
+    cab.querySelector('.mueble-nom').textContent = mu.nombre || modelo.nombre;
+    cab.querySelector('.mueble-med').textContent = mu.cant + ' × ' +
+      Object.entries(mu.med).filter(([k]) => ['ancho','alto','prof'].includes(k)).map(([,v]) => v).join(' × ') + ' mm';
+    cab.querySelector('.mueble-sub').textContent = money(costoDeUno(T.porMueble[i]));
+  });
+  $('#contadorMuebles').textContent = S.muebles.length
+    ? S.muebles.reduce((a,m)=>a+(+m.cant||0),0) + ' unidades' : '';
+  guardar();
+}
+
+/* ==================================================================
+   PERSISTENCIA
+   ================================================================== */
+let tGuardar;
+function guardar(){
+  clearTimeout(tGuardar);
+  tGuardar = setTimeout(async () => {
+    try { await window.storage.set(CLAVE, JSON.stringify(S)); }
+    catch(err){ /* sin almacenamiento: la sesión sigue funcionando igual */ }
+  }, 400);
+}
+
+/* funde un estado guardado (del navegador o de un backup) sobre los valores
+   por defecto: conserva lo guardado, pero solo de las claves que todavía
+   existen, y siempre con las etiquetas actuales. Devuelve el S nuevo. */
+/* pasa todas las familias al formato de presentaciones (ver migrarDecorado) */
+function migrarMateriales(mats){
+  const def = {melamina:{nombre:'Melamina', tipo:'placa'}, madera:{nombre:'Madera', tipo:'maciza'}};
+  for(const fk in mats){
+    const fam = mats[fk]; if(!fam) continue;
+    fam.nombre = fam.nombre || (def[fk] ? def[fk].nombre : fk);
+    fam.tipo   = fam.tipo   || (def[fk] ? def[fk].tipo   : 'placa');
+    if(!fam.opciones) fam.opciones = {};
+    for(const id in fam.opciones){
+      const d = fam.opciones[id] = migrarDecorado(fam.opciones[id]);
+      // veta: si el dato viejo no la trae, la deduzco del tipo de familia y el grupo
+      if(d.veta === undefined)
+        d.veta = fam.tipo === 'maciza' ? true : VETA_GRUPOS_MEL.has(d.g);
+    }
+  }
+  return mats;
+}
+
+/* Las condiciones de ejemplo que traía el programa antes. Si el taller nunca
+   las tocó, se borran solas: eran una suposición nuestra, no sus condiciones.
+   Si las editó aunque sea una coma, quedan como están. */
+const CONDICIONES_DE_EJEMPLO =
+  'Incluye colocación. No incluye mesada, electrodomésticos, instalación eléctrica ni sanitaria.\n' +
+  '50% al aceptar el presupuesto, 50% contra entrega.';
+
+/* El canto pasó por dos formatos viejos: primero era un herraje más
+   ({n, u, precio}), después un catálogo plano ({n, precio}). Los dos se
+   traducen al formato de anchos sin perder el precio que el taller cargó. */
+function migrarCantos(g, base){
+  /* el nombre viejo ya traía el ancho adentro ("Canto PVC 22 mm"); ahora el
+     ancho va aparte, así que se lo saco para que no salga repetido */
+  const anchoDelNombre = n => {
+    const m = String(n||'').match(/(\d+([.,]\d+)?)\s*mm\s*$/);
+    return {n: m ? String(n).slice(0, m.index).trim() : (n || 'Canto'),
+            ancho: m ? +String(m[1]).replace(',', '.') : 22};
+  };
+  const guardados = g.cantos && Object.keys(g.cantos).length ? clon(g.cantos) : null;
+  if(!guardados){
+    // más viejo todavía: el canto vivía adentro de herrajes
+    if(g.herrajes && g.herrajes.canto){
+      const d = anchoDelNombre(g.herrajes.canto.n);
+      return {canto_propio: {n: d.n, g:'otros',
+        pres:[{ancho:d.ancho, precio:+g.herrajes.canto.precio || 0, venta:'metro', largoRollo:0}]}};
+    }
+    return clon(base.cantos);
+  }
+  for(const id in guardados){
+    const c = guardados[id];
+    if(Array.isArray(c.pres)) continue;                    // ya está en el formato nuevo
+    const d = anchoDelNombre(c.n);
+    guardados[id] = {n:d.n, g:c.g || 'otros',
+      pres:[{ancho:d.ancho, precio:+c.precio || 0, venta:'metro', largoRollo:0}]};
+  }
+  return guardados;
+}
+
+function fusionarEstado(g){
+  const base = inicial();
+  const fusionar = (def, guardado) => {
+    const o = {};
+    for(const k in def) o[k] = {...def[k], ...((guardado||{})[k]||{}), n: def[k].n, u: def[k].u};
+    return o;
+  };
+  const cantosGuardados = migrarCantos(g, base);
+  const selGuardado = typeof g.cantoSel === 'string'
+    ? {id:g.cantoSel, ancho:22}          // formato viejo: era solo el id
+    : (g.cantoSel || {});
+
+  const nuevo = {...base, ...g,
+    armado:   {...base.armado, ...(g.armado||{})},
+    cantos:   cantosGuardados,
+    cantoSel: cantosGuardados[selGuardado.id]
+      ? {id:selGuardado.id, ancho:+selGuardado.ancho || 22}
+      : {id: Object.keys(cantosGuardados)[0] || null, ancho:22},
+    placas:   fusionar(base.placas, g.placas),
+    herrajes: fusionar(base.herrajes, g.herrajes),
+    mo:       fusionar(base.mo, g.mo),
+    coef:     fusionar(base.coef, g.coef),
+    // familias de material: se conservan las guardadas (con todos sus decorados)
+    // y se garantiza que existan las familias por defecto
+    materiales: migrarMateriales({...clon(base.materiales), ...(g.materiales ? clon(g.materiales) : {})}),
+    materialSel: {...base.materialSel, ...(g.materialSel||{})},
+    interiorId: g.interiorId || base.interiorId,
+    catalogoVersion: +g.catalogoVersion || 0,    // sin sello = catálogo viejo, hay que sembrarle los nuevos
+    decoradosQuitados: Array.isArray(g.decoradosQuitados) ? g.decoradosQuitados.slice() : [],
+    empresa:  {...base.empresa, ...(g.empresa||{})},
+    guardados: Array.isArray(g.guardados) ? g.guardados : [],
+    modelosGuardados: Array.isArray(g.modelosGuardados) ? g.modelosGuardados : []};
+  nuevo.muebles = (nuevo.muebles||[]).filter(m => MODELOS[m.tipo]);
+  // los ejemplos que traía el programa se retiran si el taller nunca los tocó
+  if((nuevo.condiciones||'').trim() === CONDICIONES_DE_EJEMPLO.trim()) nuevo.condiciones = '';
+  if(+nuevo.validez === 15 && g.validez === 15) nuevo.validez = 0;
+  return nuevo;
+}
+
+/* Al que ya venía usando la app le faltan los decorados nuevos de la lista.
+   Se los agregamos sin tocarle un solo precio de los que ya cargó, y sin
+   devolverle los que él borró a propósito. */
+function sembrarCatalogo(){
+  if(+S.catalogoVersion >= CATALOGO_VERSION) return false;
+  const quitados = Array.isArray(S.decoradosQuitados) ? S.decoradosQuitados : (S.decoradosQuitados = []);
+  const borrado = (fk, id) => quitados.includes(id) || quitados.includes(fk + ':' + id);
+  const semillas = {melamina: decoradosMelamina(), madera: maderasMacizas()};
+
+  for(const fk in semillas){
+    const fam = S.materiales[fk] ||
+      (S.materiales[fk] = {nombre:fk, tipo: fk === 'madera' ? 'maciza' : 'placa', opciones:{}});
+    if(!fam.opciones) fam.opciones = {};
+    for(const id in semillas[fk]){
+      if(borrado(fk, id)) continue;                            // lo borró él: no vuelve
+      const mio = fam.opciones[id];
+      if(!mio){ fam.opciones[id] = semillas[fk][id]; continue; }  // material nuevo
+      // ya lo tiene: solo le sumo las presentaciones que le falten, sin tocar precios
+      if(!mio.g && semillas[fk][id].g) mio.g = semillas[fk][id].g;   // grupo de color
+      mio.pres = mio.pres || [];
+      for(const p of semillas[fk][id].pres){
+        if(!mio.pres.some(q => mismaPres(q, p))) mio.pres.push(clon(p));
+      }
+      mio.pres.sort((a,b) => a.esp - b.esp || (a.ancho||0) - (b.ancho||0));
+    }
+  }
+  /* los cantos del catálogo, con la misma regla: no pisan precios ni vuelven
+     los que el taller borró */
+  S.cantos = S.cantos || {};
+  const semillaCanto = cantosDeCatalogo();
+  for(const id in semillaCanto){
+    if(borrado('canto', id)) continue;
+    const mio = S.cantos[id];
+    if(!mio){ S.cantos[id] = semillaCanto[id]; continue; }
+    if(!mio.g) mio.g = semillaCanto[id].g;
+    mio.pres = mio.pres || [];
+    for(const p of semillaCanto[id].pres){
+      if(!mio.pres.some(q => +q.ancho === +p.ancho)) mio.pres.push(clon(p));
+    }
+    mio.pres.sort((a,b) => a.ancho - b.ancho);
+  }
+
+  S.catalogoVersion = CATALOGO_VERSION;
+  return true;
+}
+
+/* identificador único (sirve para empresa y para lo que venga) */
+function nuevoId(pref){
+  const base = (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  return (pref || '') + base;
+}
+
+/* Cada empresa tiene un id propio desde el día uno, y cada presupuesto
+   guardado lo lleva. Hoy es invisible (un navegador = un taller), pero el
+   día que esto vaya a la nube con login, los datos ya están etiquetados por
+   empresa y no hay que reescribir nada. */
+function asegurarEmpresaId(){
+  if(!S.empresa.id) S.empresa.id = nuevoId('emp_');
+  let cambio = false;
+  for(const d of S.guardados){
+    if(!d.empresaId){ d.empresaId = S.empresa.id; cambio = true; }   // presupuestos viejos sin sello
+  }
+  return cambio;
+}
+
+async function cargar(){
+  try{
+    const r = await window.storage.get(CLAVE);
+    if(r && r.value) S = fusionarEstado(JSON.parse(r.value));
+  }catch(err){ /* primera vez o sin almacenamiento */ }
+  const cambioEmpresa = asegurarEmpresaId();
+  const cambioCatalogo = sembrarCatalogo();
+  sincronizarCampos();
+  render();
+  if(cambioEmpresa || cambioCatalogo) guardar();
+}
+
+/* ==================================================================
+   BACKUP — bajar una copia de todo y volver a cargarla
+   Es la única red de seguridad: si se rompe la compu o se limpia el
+   navegador, sin backup se pierde todo.
+   ================================================================== */
+function exportarTodo(){
+  const nombre = 'presupuestos-backup-' + hoy() + '.json';
+  const blob = new Blob([JSON.stringify(S, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  avisar('Copia descargada: ' + nombre);
+}
+
+function importarTodo(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let g;
+    try { g = JSON.parse(reader.result); }
+    catch(e){ avisar('Ese archivo no es una copia válida.', true); return; }
+    if(!g || typeof g !== 'object' || !Array.isArray(g.guardados)){
+      avisar('Ese archivo no parece una copia de presupuestos.', true); return;
+    }
+    const cuantos = g.guardados.length;
+    if(!confirm(`Vas a reemplazar TODO lo que tenés ahora (presupuestos y precios) por la copia (${cuantos} presupuesto${cuantos===1?'':'s'}). ¿Seguir?`)) return;
+    S = fusionarEstado(g);
+    asegurarEmpresaId();
+    docPrecios = null;
+    sincronizarCampos(); irA('archivo'); render();
+    avisar('Copia importada: ' + cuantos + ' presupuesto' + (cuantos===1?'':'s'));
+  };
+  reader.readAsText(file);
+}
+
+cargar();
+</script>
