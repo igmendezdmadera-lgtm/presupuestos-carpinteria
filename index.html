@@ -64,7 +64,10 @@ input,select{font-family:inherit;font-size:inherit;color:inherit}
 
 main{flex:1;min-width:0;padding:20px 22px 90px}
 
-@media(max-width:720px){
+/* La barra de abajo aparece en cualquier aparato táctil (tablet/celular, que
+   se usa con el dedo) o en ventana angosta — no solo por ancho, porque una
+   tablet es ancha y si no le quedaba la barra lateral igual que la PC. */
+@media(max-width:720px),(pointer:coarse){
   .lateral{display:none}
   main{padding:16px 14px 84px}
   .inferior{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;
@@ -918,6 +921,7 @@ const inicial = () => ({
     corredera:{n:'Corredera 45 cm', u:'jgo',precio:380},
     tirador:  {n:'Tirador',         u:'un', precio:150},
     regaton:  {n:'Regatón',         u:'un', precio:20},
+    barral:   {n:'Barral para colgar (con soportes)', u:'un', precio:0},
     tornillo: {n:'Tornillería / cola (por mueble)', u:'gl', precio:120}
   },
   mo: {
@@ -1277,6 +1281,25 @@ const MODELOS = {
           puertas(A, H, C, 2)
         ],
         herrajes: {bisagra:8, tirador:2, regaton:6, tornillo:2}
+      };
+    }
+  },
+  vestidor: {
+    nombre: 'Vestidor (abierto)',
+    fila: 'alto',
+    med: {ancho:1600, alto:2400, prof:600},
+    horas: {taller:7, colocacion:3},
+    calc(m, C){
+      const {ancho:A, alto:H, prof:P} = m, e = +C.espesor;
+      const medio = (A - 3*e)/2;
+      return {
+        piezas: [
+          ...carcasa(A, H, P, C, {tapa:'completa'}),
+          {nombre:'Tabique divisor',        mat:matCuerpo(C), largo:H - 2*e, ancho:P,      cant:1, cantos:{t:0,b:0,l:1,r:0}},
+          {nombre:'Estante (lado repisas)', mat:matCuerpo(C), largo:medio,   ancho:P - 20, cant:5, cantos:{t:0,b:0,l:1,r:0}},
+          {nombre:'Estante sobre el barral',mat:matCuerpo(C), largo:medio,   ancho:P - 20, cant:1, cantos:{t:0,b:0,l:1,r:0}}
+        ],
+        herrajes: {barral:1, regaton:4, tornillo:2}
       };
     }
   },
